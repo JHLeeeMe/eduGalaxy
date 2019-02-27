@@ -8,7 +8,7 @@ class EduGalaxyUser(models.Model):
     user_pwd = models.CharField(max_length=15)
     user_nickname = models.CharField(max_length=15)
     user_age = models.IntegerField()
-    user_job = models.CharField()
+    user_job = models.CharField(max_length=30)
     user_sex = models.BooleanField()
     user_address1 = models.CharField(max_length=100)
     user_address2 = models.CharField(max_length=100)
