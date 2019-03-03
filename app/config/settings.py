@@ -125,3 +125,6 @@ STATICFILES_DIRS = [
 ]
 # $python manage.py collectstatic 명령어 사용시 파일들이 모이는 위치
 STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL)
+
+
+LOGIN_REDIRECT_URL = '../../'
