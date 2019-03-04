@@ -11,7 +11,7 @@
             <h1><a href="{% url 'index' %}">Django tutorial</a></h1>
             {% if user.is_authenticated %}
                 <h3><a href="{% url 'logout' %}">LOG OUT</a></h3>
-                {{ user.username }}
+                Hello {{ user.user_nickname }}
             {% else %}
                 <h3><a href="{% url 'login' %}">SIGN IN / SIGN UP</a></h3>
             {% endif %}
