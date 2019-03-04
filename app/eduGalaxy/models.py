@@ -52,7 +52,7 @@ class EduGalaxyUserManager(BaseUserManager):
 
 
 class EduGalaxyUser(AbstractBaseUser, PermissionsMixin):
-    user_email = models.EmailField(unique=True, max_length=50, verbose_name='아이디')
+    user_email = models.EmailField(unique=True, max_length=50, verbose_name='이메일')
     user_nickname = models.CharField(unique=True, null=False, max_length=15, verbose_name='닉네임')
     user_age = models.IntegerField(default=28, verbose_name='나이')
     user_job = models.CharField(max_length=30, verbose_name='직업')

@@ -12,5 +12,5 @@ def index(request):
 class EduGalaxyUserCreateView(CreateView):
     template_name = 'registration/signup.html'
     form_class = EduGalaxyUserCreationForm
-    success_url = reverse_lazy('index')
+    success_url = reverse_lazy('resistration/login.html')
 
