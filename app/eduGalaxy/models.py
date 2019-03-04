@@ -6,38 +6,54 @@ from django.utils import timezone
 
 
 class EduGalaxyUserManager(BaseUserManager):
-    def _create_user(self, user_email, password=None, **kwargs):
+
+    def create_user(self, user_email, user_nickname, password=None):
+        """
+        주어진 이메일, 닉네임, 비밀번호 등 개인정보로 User 인스턴스 생성
+        """
         if not user_email:
-            raise ValueError('이메일은 필수입니다.')
-        user = self.model(user_email=self.normalize_email(user_email), **kwargs)
+            raise ValueError(_('Users must have an email address'))
+
+        user = self.model(
+            user_email=self.normalize_email(user_email),
+            user_nickname=user_nickname,
+        )
+
         user.set_password(password)
         user.save(using=self._db)
+        return user
 
-    def create_user(self, user_email, password, **kwargs):
+    def create_superuser(self, user_email, user_nickname, password):
         """
-        일반 유저 생성
+        주어진 이메일, 닉네임, 비밀번호 등 개인정보로 User 인스턴스 생성
+        단, 최상위 사용자이므로 권한을 부여한다.
         """
-        kwargs.setdefault('is_superuser', False)
-        return self._create_user(user_email, password, **kwargs)
+        user = self.create_user(
+            user_email=user_email,
+            password=password,
+            user_nickname=user_nickname,
+        )
 
-    def create_superuser(self, user_email, password, **kwargs):
-        """
-        관리자 유저 생성
-        """
-        kwargs.setdefault('is_superuser', True)
-        return self._create_user(user_email, password, **kwargs)
+        user.is_superuser = True
+        user.save(using=self._db)
+        return user
+
+    # def create_user(self, user_email, password):
+    #     """
+    #     일반 유저 생성
+    #     """
+    #     return self._create_user(user_email, password, **kwargs)
+    #
+    # def create_superuser(self, user_email, password):
+    #     """
+    #     관리자 유저 생성
+    #     """
+    #     return self._create_user(user_email, password, **kwargs)
 
 
 class EduGalaxyUser(AbstractBaseUser, PermissionsMixin):
-    # uuid = models.UUIDField(
-    #     primary_key=True,
-    #     unique=True,
-    #     editable=False,
-    #     default=uuid.uuid4,
-    #     verbose_name='PK'
-    # )
     user_email = models.EmailField(unique=True, max_length=50, verbose_name='아이디')
-    user_nickname = models.CharField(max_length=15, verbose_name='닉네임')
+    user_nickname = models.CharField(unique=True, null=False, max_length=15, verbose_name='닉네임')
     user_age = models.IntegerField(default=28, verbose_name='나이')
     user_job = models.CharField(max_length=30, verbose_name='직업')
     user_sex = models.BooleanField(default=False, verbose_name='성별')
@@ -49,8 +65,8 @@ class EduGalaxyUser(AbstractBaseUser, PermissionsMixin):
     user_signup_ip = models.CharField(max_length=20, verbose_name='가입 ip')
     date_joined = models.DateTimeField(default=timezone.now, verbose_name='Date joined')
     is_active = models.BooleanField(default=True, verbose_name='활성화 여부')
-    is_superuser = models.BooleanField(default=False, verbose_name='관리자 여부')
-    is_staff = models.BooleanField(default=False, verbose_name='관리자 페이지 Access 가능 여부')
+    # is_superuser = models.BooleanField(default=False, verbose_name='관리자 여부')
+    # is_staff = models.BooleanField(default=False, verbose_name='관리자 페이지 Access 가능 여부')
 
     USERNAME_FIELD = 'user_email'
     REQUIRED_FIELDS = ['user_nickname']
