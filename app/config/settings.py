@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '2$n!&!()oa=!mmob97abn$10=y3l8u%*yi&nc4yi79oe(h6$gy'
+SECRET_KEY = '!e!smu=977b1tm$4dxi8w2(4+x+8bd^d1n$)+(yme=36#(ow@v'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -55,8 +55,8 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        # app 안의 templates 폴더에서 템플릿을 찾을 것인지 설정
         'DIRS': ['templates/'],
-	# app안의 templates폴더에서 템플릿을 찾을 것인지 설정
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -102,13 +102,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-AUTH_USER_MODEL = 'eduGalaxy.EduGalaxyUser'
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ko'
 
 TIME_ZONE = 'Asia/Seoul'
 
@@ -122,12 +119,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
+# $python manage.py collectstatic 명령어 사용시 파일들이 모이는 위치
+
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static/')
 ]
-# $python manage.py collectstatic 명령어 사용시 파일들이 모이는 위치
+
 STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL)
 
+AUTH_USER_MODEL = 'eduGalaxy.EduGalaxyUser'
 
-LOGIN_REDIRECT_URL = '../../'
