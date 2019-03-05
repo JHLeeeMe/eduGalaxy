@@ -72,7 +72,7 @@ class EduGalaxyUser(AbstractBaseUser):
     date_joined = models.DateTimeField(default=timezone.now, verbose_name='Date joined')
 
     # AbstractBaseUser 를 상속받음으로써 정의해줘야하는 필드
-    is_active = models.BooleanField(default=True, verbose_name='활성화 여부')
+    is_active = models.BooleanField(default=False, verbose_name='활성화 여부')
     is_admin = models.BooleanField(default=False, verbose_name='관리자')
 
     objects = EduGalaxyUserManager()
