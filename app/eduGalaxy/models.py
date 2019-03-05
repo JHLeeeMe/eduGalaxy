@@ -73,7 +73,7 @@ class EduGalaxyUser(AbstractBaseUser):
 
     # AbstractBaseUser 를 상속받음으로써 정의해줘야하는 필드
     is_active = models.BooleanField(default=True, verbose_name='활성화 여부')
-    is_admin = models.BooleanField(default=False, verbose_name='관리자 구분')
+    is_admin = models.BooleanField(default=False, verbose_name='관리자')
 
     objects = EduGalaxyUserManager()
 
@@ -95,7 +95,7 @@ class EduGalaxyUser(AbstractBaseUser):
 
     # has_perms, has_module_perms 장고 인증 백엔드에서 사용
     # 사용자 특정 권한 여부
-    def has_perms(self, perm, obj=None):
+    def has_perm(self, perm, obj=None):
         return True
 
     # user 가 주어진 앱에 해당 권한이 있는지 확인
