@@ -20,3 +20,4 @@ class EduGalaxyUserCreationForm(UserCreationForm):
                   'user_phone',
                   'user_receive_email',
                   ]
+

@@ -14,3 +14,4 @@ class EduGalaxyUserCreateView(CreateView):
     form_class = EduGalaxyUserCreationForm
     success_url = reverse_lazy('login')
 
+
