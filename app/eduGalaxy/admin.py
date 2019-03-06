@@ -63,10 +63,9 @@ class EduGalaxyUserAdmin(BaseUserAdmin):
     )
 
     search_fields = ('user_email',)
-    ordering = ('user_email',)
+    ordering = ('date_joined',)
     filter_horizontal = ()
 
 
 admin.site.register(EduGalaxyUser, EduGalaxyUserAdmin)
 admin.site.unregister(Group)
-

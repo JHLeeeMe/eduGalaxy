@@ -18,7 +18,6 @@ class EduGalaxyUserManager(BaseUserManager):
                 user_nickname=user_nickname,
             )
             user.set_password(password)
-            user.is_active = True
             user.save(using=self._db)
             return user
         except:
@@ -36,7 +35,6 @@ class EduGalaxyUserManager(BaseUserManager):
                 user_nickname=user_nickname,
             )
             superuser.is_admin = True
-            superuser.is_active = True
             superuser.save(using=self._db)
             return superuser
         except:
@@ -69,10 +67,10 @@ class EduGalaxyUser(AbstractBaseUser):
     # 관리자 필요 데이터
     user_confirm = models.BooleanField(default=False, verbose_name='본인인증 여부')
     user_signup_ip = models.CharField(max_length=20, verbose_name='가입 ip')
-    date_joined = models.DateTimeField(default=timezone.now, verbose_name='Date joined')
+    date_joined = models.DateTimeField(default=timezone.now, verbose_name='가입날짜')
 
     # AbstractBaseUser 를 상속받음으로써 정의해줘야하는 필드
-    is_active = models.BooleanField(default=False, verbose_name='활성화 여부')
+    is_active = models.BooleanField(default=True, verbose_name='활성화 여부')
     is_admin = models.BooleanField(default=False, verbose_name='관리자')
 
     objects = EduGalaxyUserManager()
