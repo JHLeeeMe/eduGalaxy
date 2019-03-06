@@ -128,3 +128,4 @@ STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL)
 
 AUTH_USER_MODEL = 'eduGalaxy.EduGalaxyUser'
 
+LOGIN_REDIRECT_URL = '../../'
