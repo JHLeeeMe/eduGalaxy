@@ -135,3 +135,4 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = 'lejung92@gmail.com'
 EMAIL_HOST_PASSWORD = 'qlalfqjsgh92@'
 EMAIL_USE_TLS = True
+LOGIN_REDIRECT_URL = '../../'
