@@ -127,3 +127,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL)
 
 AUTH_USER_MODEL = 'user.EduGalaxyUser'
 
+LOGIN_REDIRECT_URL = 'eduGalaxy:index'
+
+# for confirm email
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'lejung92@gmail.com'
+EMAIL_HOST_PASSWORD = 'qlalfqjsgh92@'
+EMAIL_USE_TLS = True

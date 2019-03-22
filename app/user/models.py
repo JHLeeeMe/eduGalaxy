@@ -2,6 +2,7 @@ from django.forms import ValidationError
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.utils import timezone
+from django.core.mail import send_mail
 
 
 class EduGalaxyUserManager(BaseUserManager):
@@ -99,6 +100,10 @@ class EduGalaxyUser(AbstractBaseUser):
     # user 가 주어진 앱에 해당 권한이 있는지 확인
     def has_module_perms(self, app_label):
         return True
+
+    def email_user(self, subject, message, from_email=None, **kwargs):
+        """Send an email to this user."""
+        send_mail(subject, message, from_email, [self.user_email], **kwargs)
 
     # 관리자 여부
     @property
