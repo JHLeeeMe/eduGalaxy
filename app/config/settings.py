@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'eduGalaxy',
+    'user',
 ]
 
 MIDDLEWARE = [
@@ -116,8 +117,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-
-
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static/')
@@ -126,6 +125,14 @@ STATICFILES_DIRS = [
 # $python manage.py collectstatic 명령어 사용시 파일들이 모이는 위치
 STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL)
 
-AUTH_USER_MODEL = 'eduGalaxy.EduGalaxyUser'
+AUTH_USER_MODEL = 'user.EduGalaxyUser'
 
+LOGIN_REDIRECT_URL = 'eduGalaxy:index'
+
+# for confirm email
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'lejung92@gmail.com'
+EMAIL_HOST_PASSWORD = 'qlalfqjsgh92@'
+EMAIL_USE_TLS = True
 LOGIN_REDIRECT_URL = '../../'
