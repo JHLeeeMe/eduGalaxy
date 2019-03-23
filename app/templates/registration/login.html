@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% extends 'registration/base.html' %}
+{% load static %}
 
 <html>
 <head>
@@ -23,6 +24,9 @@
                 <a href="{% url 'signup' %}">회원 가입</a>
             </div>
         </div>
+        
+        {% include 'templates/registration/social_login_panel.html' %}
+
     {% endblock content %}
 </body>
 </html>
