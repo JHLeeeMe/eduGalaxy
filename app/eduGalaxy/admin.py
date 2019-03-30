@@ -48,7 +48,24 @@ class EduGalaxyUserAdmin(BaseUserAdmin):
     form = EduGalaxyUserChangeForm
     add_form = EduGalaxyUserCreationForm
 
-    list_display = ('user_email', 'user_nickname', 'date_joined', 'is_admin')
+    list_display =(
+        'id',
+        'user_email',
+        'password',
+        'user_nickname',
+        'user_age',
+        'user_job',
+        'user_sex',
+        'user_address1',
+        'user_address2',
+        'user_phone',
+        'last_login',
+        'user_receive_email',
+        'user_confirm',
+        'user_signup_ip',
+        'date_joined',
+        'is_active',
+        'is_admin')
     list_filter = ('is_admin',)
     fieldsets = (
         (None, {'fields': ('user_email', 'password','user_nickname')}),
@@ -69,3 +86,4 @@ class EduGalaxyUserAdmin(BaseUserAdmin):
 
 admin.site.register(EduGalaxyUser, EduGalaxyUserAdmin)
 admin.site.unregister(Group)
+
