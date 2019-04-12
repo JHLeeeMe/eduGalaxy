@@ -87,6 +87,7 @@ class SocialLoginCallbackView(NaverLoginMixin, View):
             if not is_success:  # 로그인 실패할 경우
                 messages.error(request, error, extra_tags='danger')
             return HttpResponseRedirect(success_url if is_success else self.failure_url)
+
         elif provider == 'google':
             user, created = self.model.objects.get_or_create(user_email=self.oauth_user_id + '@google.comm')
             if created:  # 사용자 생성할 경우
@@ -95,8 +96,15 @@ class SocialLoginCallbackView(NaverLoginMixin, View):
                 user.user_confirm = True
                 user.save()
             return login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+
         elif provider == 'kakao':
-            return HttpResponseRedirect(self.success_url)
+            user, created = self.model.objects.get_or_create(user_email=self.oauth_user_id + '@kakao.comm')
+            if created:
+                user.set_password(None)
+                user.user_nickname = self.oauth_user_id
+                user.user_confirm = True
+                user.save()
+            return login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
 
         return HttpResponseRedirect(self.failure_url)
 
