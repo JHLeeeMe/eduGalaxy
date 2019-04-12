@@ -2,7 +2,6 @@ from .models import EduGalaxyUser
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.utils.translation import ugettext as _
-# from .validators import RegisteredEmailValidator
 
 
 class EduGalaxyUserCreationForm(UserCreationForm):
@@ -23,7 +22,7 @@ class EduGalaxyUserCreationForm(UserCreationForm):
     user_age = forms.IntegerField(label='나이',)
     user_job = forms.CharField(label='직업',)
     user_sex = forms.ChoiceField(
-        choices=((0, '남자'), (1, '여자')),
+        choices=(('M', '남자'), ('F', '여자')),
         label='성별',
     )
     user_address1 = forms.CharField(label='주소1',)
@@ -46,10 +45,3 @@ class EduGalaxyUserCreationForm(UserCreationForm):
                   'user_address2',
                   'user_phone',
                   'user_receive_email']
-
-
-# class VerificationEmailForm(forms.Form):
-#     user_email = forms.EmailField(
-#         validators=forms.EmailField.default_validators + [RegisteredEmailValidator()],
-#         widget=forms.EmailInput(attrs={'autofocus': True})
-#     )

@@ -12,5 +12,6 @@ urlpatterns = [
     path('user/signup/', user_views.EduGalaxyUserCreateView.as_view(), name='signup'),
     path('user/<pk>/verify/<token>/', user_views.EduGalaxyUserVerificationView.as_view(), name='verify'),
     path('user/resend_verify_email/', user_views.ResendVerificationEmailView.as_view(), name='resend'),
+    path('user/login/social/<provider>/callback/', user_views.SocialLoginCallbackView.as_view(), name='social_callback'),
 ]
 

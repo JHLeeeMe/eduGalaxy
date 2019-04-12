@@ -24,9 +24,13 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.pythonanywhere.com']
 
+# backends
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'user.oauth.backends.NaverBackend',
+]
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -54,7 +58,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # app 안의 templates 폴더에서 템플릿을 찾을 것인지 설정
-        'DIRS': ['templates/'],
+        'DIRS': [os.path.join(BASE_DIR, 'templates/')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -113,7 +117,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
@@ -136,3 +139,9 @@ EMAIL_HOST_USER = 'lejung92@gmail.com'
 EMAIL_HOST_PASSWORD = 'qlalfqjsgh92@'
 EMAIL_USE_TLS = True
 LOGIN_REDIRECT_URL = '../../'
+
+# Social Auth
+NAVER_CLIENT_ID = 'pPM3VjFMgEpE_fsUrjFd'
+NAVER_SECRET_KEY = '84vvCfJz57'
+GOOGLE_CLIENT_ID = '442447136305-6l8ogrdbvnr20m29kh2claiejbpm94sa.apps.googleusercontent.com'
+GOOGLE_SECRET_KEY = 'IYWR6pOvinr-Sy8s0YTtdPmM'
