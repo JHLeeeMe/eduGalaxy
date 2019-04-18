@@ -67,7 +67,7 @@ class ResendVerificationEmailView(View, VerificationEmailMixin):
 class SocialLoginCallbackView(NaverLoginMixin, View):
 
     success_url = reverse_lazy('eduGalaxy:index')
-    failure_url = reverse_lazy('login')
+    failure_url = reverse_lazy('user:login')
     required_profiles = ['email', 'gender']
     model = get_user_model()
     oauth_user_id = None
