@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.contrib.auth import login
-from django.contrib.auth.tokens import default_token_generator
 
 import requests
 
@@ -61,7 +60,7 @@ class NaverLoginMixin:
         if created:  # 사용자 생성할 경우
             user.set_password(None)
             user.user_nickname = profiles.get('id')
-            user.user_sex = profiles.get('gender')
+            user.user_gender = profiles.get('gender')
             user.user_confirm = True
             user.save()
 

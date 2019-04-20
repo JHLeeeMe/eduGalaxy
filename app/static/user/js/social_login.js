@@ -53,9 +53,11 @@ function kakaoLogin(){
 function checkLoginStatus() {
     console.log('checkLoginStatus()');
     if(gauth.isSignedIn.get()) {
-        window.profile = gauth.currentUser.get().getBasicProfile();
+//        window.profile = gauth.currentUser.get().getBasicProfile();
+        window.profile = gauth.currentUser.get();
+        console.log(profile.getId())
     } else {
-        alert('is not SignedIn');
+        console.log('is not SignedIn');
     }
 }
 
@@ -65,14 +67,16 @@ function init() {
         console.log('gapi.load()');
         window.gauth = gapi.auth2.init({
             client_id: '442447136305-6l8ogrdbvnr20m29kh2claiejbpm94sa.apps.googleusercontent.com',
-            ux_mode: 'redirect',
-            redirect_uri: 'http://localhost:8000/user/login/social/google/callback'
+//            ux_mode: 'redirect',
+            redirect_uri: 'http://localhost:8000/user/login/social/google/callback',
+            fetch_basic_profile: false,
+            scope: 'profile'
         })
-        gauth.then(function() {
-            checkLoginStatus();
-        }, function() {
-            alert('googleAuth Fail');
-        });
+    gauth.then(function() {
+        checkLoginStatus();
+    }, function() {
+        alert('googleAuth Fail');
+    });
     });
 }
 
@@ -81,12 +85,12 @@ function googleLogin() {
     window.provider = 'google'
     gauth.signIn().then(function() {
         checkLoginStatus();
+        if (profile.getId() != null) {
+            post_to_url();
+        } else {
+            alert('login failed')
+        }
     });
-    if (profile.getId() != null) {
-        post_to_url();
-    } else {
-        alert('login failed')
-    }
 }
 
 function post_to_url() {
@@ -94,6 +98,7 @@ function post_to_url() {
     method = "post"; // 전송 방식 기본값을 POST로
 
     if (provider == 'google') {
+        console.log('provider = ' + provider)
         inputHiddenForm();
         form.setAttribute("action", location.origin + '/user/login/social/google/callback/' + location.search);
         hiddenField.setAttribute("value", profile.getId());
@@ -102,6 +107,8 @@ function post_to_url() {
         inputHiddenForm();
         form.setAttribute("action", location.origin + '/user/login/social/kakao/callback/' + location.search);
         hiddenField.setAttribute("value", userID);
+    } else {
+        console.log('provider is null')
     }
     form.appendChild(hiddenField);
     form.appendChild(hiddenFieldForCsrf);
