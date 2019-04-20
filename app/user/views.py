@@ -17,7 +17,7 @@ from .forms import EduGalaxyUserCreationForm
 class EduGalaxyUserCreateView(CreateView, VerificationEmailMixin):
     template_name = 'registration/signup.html'
     form_class = EduGalaxyUserCreationForm
-    success_url = reverse_lazy('login')
+    success_url = reverse_lazy('user:login')
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -36,7 +36,7 @@ class EduGalaxyUserVerificationView(TemplateView):
         else:
             messages.info(request, '인증이 실패되었습니다.')
 
-        return HttpResponseRedirect(reverse('login'))  # 인증 여부와 상관 없이 무조건 로그인 페이지로 이동
+        return HttpResponseRedirect(reverse('user:login'))  # 인증 여부와 상관 없이 무조건 로그인 페이지로 이동
 
     def is_valid_token(self, **kwargs):
         pk = kwargs.get('pk')
