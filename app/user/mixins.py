@@ -19,4 +19,5 @@ class VerificationEmailMixin:
         messages.info(self.request, '회원가입을 축하드립니다. 가입하신 이메일주소로 인증메일을 발송했으니 확인 후 인증해주세요.')
 
     def build_verification_link(self, user, token):
-        return '{}/user/{}/verify/{}/'.format(self.request.META.get('HTTP_ORIGIN'), user.pk, token)
+        # return '{}/user/{}/verify/{}/'.format(self.request.META.get('HTTP_ORIGIN'), user.pk, token)
+        return '{}/user/{}/verify/{}/'.format('http://localhost:8000', user.pk, token)
