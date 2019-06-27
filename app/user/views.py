@@ -34,7 +34,7 @@ class EduGalaxyUserVerificationView(TemplateView):
         if self.is_valid_token(**kwargs):
             messages.info(request, '인증이 완료되었습니다.')
         else:
-            messages.info(request, '인증이 실패되었습니다.')
+            messages.info(request, '인증이 실패하였습니다.')
 
         return HttpResponseRedirect(reverse('user:login'))  # 인증 여부와 상관 없이 무조건 로그인 페이지로 이동
 
@@ -117,3 +117,5 @@ class SocialLoginCallbackView(NaverLoginMixin, View):
     def set_session(self, **kwargs):
         for key, value in kwargs.items():
             self.request.session[key] = value
+
+
