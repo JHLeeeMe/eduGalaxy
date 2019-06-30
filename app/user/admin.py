@@ -75,7 +75,7 @@ class EduGalaxyUserAdmin(BaseUserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields':('user_email', 'user_nickname', 'password1', 'password2')}
+            'fields': ('user_email', 'user_nickname', 'password1', 'password2')}
          ),
     )
 
@@ -86,3 +86,29 @@ class EduGalaxyUserAdmin(BaseUserAdmin):
 
 admin.site.register(EduGalaxyUser, EduGalaxyUserAdmin)
 admin.site.unregister(Group)
+
+# 주소명 DB 관리(현 보류)
+
+# class DeveloperSite(admin.AdminSite):
+#     site_header = "EduGalaxy Developers.."
+#     site_title = "EduGalaxy 개발자 사이트 / 안전제일..."
+#     index_title = "Good Luck.."
+#
+#
+# class DeveloperInline(admin.StackedInline):
+#     model = AddressSelect
+#
+#
+# developer_site = DeveloperSite(name='dev')
+#
+#
+# class AddressSelectAdmin(admin.ModelAdmin):
+#     list_display = ['id', 'province', 'city', 'dong']
+#     list_per_page = 15
+#     list_filter = ['province', 'city']
+#
+#     ordering = ('province',)
+#     filter_horizontal = ()
+#
+#
+# developer_site.register(AddressSelect, AddressSelectAdmin)
