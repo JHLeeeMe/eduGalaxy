@@ -17,6 +17,7 @@ from .forms import EduGalaxyUserCreationForm
 class EduGalaxyUserCreateView(CreateView, VerificationEmailMixin):
     template_name = 'registration/signup.html'
     form_class = EduGalaxyUserCreationForm
+    # 수정 필요
     success_url = reverse_lazy('user:login')
 
     def form_valid(self, form):
@@ -24,6 +25,7 @@ class EduGalaxyUserCreateView(CreateView, VerificationEmailMixin):
         if form.instance:
             self.send_verification_email(form.instance)
         return response
+
 
 
 class EduGalaxyUserVerificationView(TemplateView):
