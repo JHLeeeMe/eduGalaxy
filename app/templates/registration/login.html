@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+{% extends 'registration/base.html' %}
+{% load static %}
+
+<html>
+<head>
+    {% block head_title %}
+        <title>Sign In</title>
+    {% endblock head_title %}
+</head>
+<body>
+    {% block content %}
+        <div class="panel panel-default registration">
+            <div class="panel-heading">
+                <h1 align="center">로그인</h1>
+            </div>
+
+        {% include 'registration/social_login_panel.html' with panel_name="소셜로그인" %}
+            <div class="panel-body">
+                <form action="." method="post"> {% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-large">로그인</button>
+                    </div>
+                </form>
+                <a href="{% url 'user:signup' %}">회원 가입</a>
+            </div>
+        </div>
+    {% endblock content %}
+</body>
+</html>

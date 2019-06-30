@@ -1,0 +1,40 @@
+{% load static %}
+
+{% static 'user/images/kakao/kakao_login.png' as kakao_button %}
+{% static 'user/images/kakao/kakao_login_ov.png' as kakao_button_hover %}
+{% static 'user/images/naver/naver_login_completion_green.png' as naver_button %}
+{% static 'user/images/naver/naver_login_completion_white.png' as naver_button_hover %}
+{% static 'user/images/google/btn_google_signin_dark_normal.png' as google_button %}
+{% static 'user/images/google/btn_google_signin_dark_pressed.png' as google_button_hover %}
+
+<script type="text/javascript" src="{% static 'user/js/social_login.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://apis.google.com/js/platform.js?onload=init" async defer></script>
+<script src="//developers.kakao.com/sdk/js/kakao.min.js"></script>
+
+<div class="panel panel-default user-panel">
+    <div class="panel-heading">
+        {{ panel_name }}
+    </div>
+    <div class="panel-body text-center">
+        <div class="pull">
+            <a href="#" id="loginBtn" value="checking..." onclick="googleLogin()">
+                <img src="{{ google_button }}"
+                         onmouseover="this.src='{{ google_button_hover }}'"
+                         onmouseleave="this.src='{{ google_button }}'" height="39">
+            </a>
+            <a href="#" id="custom-login-btn" value="checking..." onclick="kakaoLogin()">
+                <img src="{{ kakao_button }}"
+                     onmouseover="this.src='{{ kakao_button_hover }}'"
+                     onmouseleave="this.src='{{ kakao_button }}'" height="35">
+            </a>
+            <a href="#" onclick="naverLogin()">
+                <img src="{{ naver_button }}"
+                     onmouseover="this.src='{{ naver_button_hover }}'"
+                     onmouseleave="this.src='{{ naver_button }}'" height="34">
+            </a>
+        </div>
+    </div>
+</div>
+
+

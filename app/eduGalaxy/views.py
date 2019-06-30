@@ -1,4 +1,5 @@
 from django.shortcuts import render
+<<<<<<< HEAD
 from .forms import EduGalaxySignupForm
 
 def index(request):
@@ -12,3 +13,9 @@ def sign_up(request):
 
 
 
+=======
+
+
+def index(request):
+    return render(request, 'eduGalaxy/index.html', {})
+>>>>>>> master
