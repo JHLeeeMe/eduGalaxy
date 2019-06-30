@@ -3,14 +3,22 @@
 
 <html>
     <head>
-	    {% block head_title %}
+        {% block head_title %}
             <title>index.html</title>
-	    {% endblock head_title %}
+	    <style>
+		.jumbotron {
+			background-color: #f4511e; /* Orange */
+			color: #ffffff;
+		}
+	    </style>
+        {% endblock head_title %}
     </head>
     <body>
         {% block content %}
-	        <h2>Hello Django !!!</h2>
-	    {% endblock content %}
+	<div class="jumbotron jumbotron-fulid text-center">
+	    <h1>에듀갤럭시</h1>
+	</div>
+        {% endblock content %}
     </body>
 </html>
 
