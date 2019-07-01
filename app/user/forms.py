@@ -1,6 +1,7 @@
-from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.utils.translation import ugettext as _
+
+from .models import EduGalaxyUser
 
 
 EMAIL_LIST = (
@@ -27,8 +28,15 @@ JOB_LIST = (
 )
 
 
-class EduGalaxyUserCreationForm(UserCreationForm):
-    user_email1 = forms.CharField(widget=forms.TextInput, label='이메일')
+class EduGalaxyUserCreationForm(forms.Form):
+    user_email1 = forms.CharField(widget=forms.TextInput(
+            attrs={
+                'autofocus': 'autofocus',
+                'required': 'required'}
+        ),
+        label='이메일'
+    )
+
     user_email2 = forms.CharField(widget=forms.TextInput(
             attrs={
                 'id': 'user_email',
@@ -81,40 +89,28 @@ class EduGalaxyUserCreationForm(UserCreationForm):
         label="직업"
     )
 
-    # 주소, 성별 보류
-    # user_gender = forms.ChoiceField(
-    #     choices=(('M', '남자'), ('F', '여자')),
-    #     label='성별',
-    # )
-
-    # province = AddressSelect.objects.filter().order_by('province').values_list('province', flat=True).distinct()
-    # province_list = [
-        #     ["default", "시/도"]
-        # ]
-        # for provinces in province:
-        #     province_list.append([provinces, provinces])
-        #
-        # province_select = forms.CharField(widget=forms.Select(
-        #     choices=tuple(province_list),
-        #     attrs={'id': 'province'},
-        #     ),
-        #     label='주소'
-        # )
-        #
-        # city_select = forms.CharField(widget=forms.Select(
-        #     choices=[("default", "시/군/구")],
-        #     attrs={'id': 'city'},
-        #     )
-        # )
-        #
-        # dong_select = forms.CharField(widget=forms.Select(
-        #     choices=[("default", "동/면/구")],
-        #     attrs={'id': 'dong'},
-        #     )
-        # )
-
     user_phone = forms.CharField(label='핸드폰 번호',)
     # checkbox 구현 필요
     user_receive_email = forms.BooleanField(
         label='이메일 수신 동의',
     )
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError(
+                self.error_messages['password_mismatch'],
+                code='password_mismatch',
+            )
+        return password2
+
+    def save(self, commit=True):
+        user = EduGalaxyUser(**self.cleaned_data)
+
+        if commit:
+            user.save()
+
+        return user
+

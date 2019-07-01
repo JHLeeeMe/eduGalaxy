@@ -1,6 +1,7 @@
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
-from django.views.generic.edit import CreateView, View
+from django.shortcuts import render
+from django.views.generic.edit import FormView, View
 from django.views.generic.base import TemplateView
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model, login
@@ -12,20 +13,58 @@ from django.middleware.csrf import _compare_salted_tokens
 
 from .mixins import VerificationEmailMixin
 from .forms import EduGalaxyUserCreationForm
+from .models import EduGalaxyUser
 
 
-class EduGalaxyUserCreateView(CreateView, VerificationEmailMixin):
-    template_name = 'registration/signup.html'
+class EduGalaxyUserCreateView(FormView, VerificationEmailMixin):
     form_class = EduGalaxyUserCreationForm
-    # 수정 필요
+    template_name = 'registration/signup.html'
     success_url = reverse_lazy('user:login')
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        if form.instance:
-            self.send_verification_email(form.instance)
-        return response
 
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(initial=self.initial)
+        context = {'form': form}
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+
+        if form.is_valid():
+            user = EduGalaxyUser()
+
+            user_email1 = form.cleaned_data['user_email1']
+            user_email2 = form.cleaned_data['user_email2']
+            select_email = form.cleaned_data['select_email']
+            age = form.cleaned_data['user_age']
+
+            if user_email2:
+                user.user_email = user_email1 + "@" + user_email2
+            else:
+                user.user_email = user_email1 + "@" + select_email
+
+            user.user_nickname = form.cleaned_data['user_nickname']
+            user.password = form.cleaned_data['password1']
+            user.user_age = int(age)
+            user.user_job = form.cleaned_data['user_job']
+
+            user.save()
+
+            return HttpResponseRedirect(self.seccess_url)
+        else:
+            return self.form_invalid(form)
+    #
+    # def form_valid(self, form, request):
+
+        # response = super().form_valid(form)
+        #
+        # if form.instance:
+        #     self.send_verification_email(form.instance)
+        #
+        # return response
+
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class EduGalaxyUserVerificationView(TemplateView):

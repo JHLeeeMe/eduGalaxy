@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% extends 'registration/base.html' %}
+{% load static %}
 
 <html>
 <head>
@@ -21,30 +22,30 @@
                 <form name="Signup_Form" action="." method="post"> {% csrf_token %}
                 <table>
                     <tr>
-                        <td>{{ EduGalaxyUserCreationForm.user_email1.label_tag }}</td>
-                        <td>{{ EduGalaxyUserCreationForm.user_email1 }} &nbsp; @ &nbsp;</td>
-                        <td>{{ EduGalaxyUserCreationForm.user_email2 }}</td>
-                        <td>{{ EduGalaxyUserCreationForm.select_email }}</td>
+                        <td>{{ form.user_email1.label_tag }}</td>
+                        <td>{{ form.user_email1 }} &nbsp; @ &nbsp;</td>
+                        <td>{{ form.user_email2 }}</td>
+                        <td>{{ form.select_email }}</td>
                     </tr>
                     <tr>
-                        <td>{{ EduGalaxyUserCreationForm.password1.label_tag }}</td>
-                        <td>{{ EduGalaxyUserCreationForm.password1 }}</td>
+                        <td>{{ form.password1.label_tag }}</td>
+                        <td>{{ form.password1 }}</td>
                     </tr>
                     <tr>
-                        <td>{{ EduGalaxyUserCreationForm.password2.label_tag }}</td>
-                        <td>{{ EduGalaxyUserCreationForm.password2 }}</td>
+                        <td>{{ form.password2.label_tag }}</td>
+                        <td>{{ form.password2 }}</td>
                     </tr>
                     <tr>
-                        <td>{{ EduGalaxyUserCreationForm.user_nickname.label_tag}}</td>
-                        <td>{{ EduGalaxyUserCreationForm.user_nickname}}</td>
+                        <td>{{ form.user_nickname.label_tag}}</td>
+                        <td>{{ form.user_nickname}}</td>
                     </tr>
                     <tr>
-                        <td>{{ EduGalaxyUserCreationForm.user_age.label_tag }}</td>
-                        <td>{{ EduGalaxyUserCreationForm.user_age }} &nbsp; 세</td>
+                        <td>{{ form.user_age.label_tag }}</td>
+                        <td>{{ form.user_age }} &nbsp; 세</td>
                     </tr>
                     <tr>
-                        <td> {{ EduGalaxyUserCreationForm.user_job.label_tag }}</td>
-                        <td> {{ EduGalaxyUserCreationForm.user_job }}</td>
+                        <td> {{ form.user_job.label_tag }}</td>
+                        <td> {{ form.user_job }}</td>
                     </tr>
                 </table>
                     <div class="form-actions">
@@ -65,9 +66,9 @@
         <!--&lt;!&ndash;-->
             <!--주소 부분 보류-->
             <!--<tr>&ndash;&gt;-->
-            <!--&lt;!&ndash;<td>{{ EduGalaxyUserCreationForm.province_select.label_tag }}</td>&ndash;&gt;-->
-            <!--&lt;!&ndash;<td>{{ EduGalaxyUserCreationForm.province_select }}</td>&ndash;&gt;-->
-            <!--&lt;!&ndash;<td>{{ EduGalaxyUserCreationForm.city_select }}</td>&ndash;&gt;-->
-            <!--&lt;!&ndash;<td>{{ EduGalaxyUserCreationForm.dong_select }}</td>&ndash;&gt;-->
+            <!--&lt;!&ndash;<td>{{ form.province_select.label_tag }}</td>&ndash;&gt;-->
+            <!--&lt;!&ndash;<td>{{ form.province_select }}</td>&ndash;&gt;-->
+            <!--&lt;!&ndash;<td>{{ form.city_select }}</td>&ndash;&gt;-->
+            <!--&lt;!&ndash;<td>{{ form.dong_select }}</td>&ndash;&gt;-->
         <!--&lt;!&ndash;</tr>&ndash;&gt;-->
     <!--</table>-->
