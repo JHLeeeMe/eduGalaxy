@@ -25,10 +25,15 @@ class EduGalaxyUserCreateView(FormView, VerificationEmailMixin):
     def get(self, request, *args, **kwargs):
         form = self.form_class(initial=self.initial)
         context = {'form': form}
+        print('get()........####')
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST)
+        print('post()........####')
+        print(form.is_valid())
+        print(form)
+        print(request.POST)
 
         if form.is_valid():
             user = EduGalaxyUser()
@@ -50,7 +55,7 @@ class EduGalaxyUserCreateView(FormView, VerificationEmailMixin):
 
             user.save()
 
-            return HttpResponseRedirect(self.seccess_url)
+            return HttpResponseRedirect(self.success_url)
         else:
             return self.form_invalid(form)
     #

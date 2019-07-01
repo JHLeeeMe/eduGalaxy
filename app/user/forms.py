@@ -39,8 +39,9 @@ class EduGalaxyUserCreationForm(forms.Form):
 
     user_email2 = forms.CharField(widget=forms.TextInput(
             attrs={
-                'id': 'user_email',
-                'disabled': 'disabled'}
+                'id': 'user_email2',
+                'disabled': 'disabled',
+                'readonly': 'readonly'}
         )
     )
 
@@ -93,6 +94,7 @@ class EduGalaxyUserCreationForm(forms.Form):
     # checkbox 구현 필요
     user_receive_email = forms.BooleanField(
         label='이메일 수신 동의',
+        required=False,
     )
 
     def clean_password2(self):
