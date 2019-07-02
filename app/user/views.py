@@ -31,37 +31,23 @@ class EduGalaxyUserCreateView(FormView, VerificationEmailMixin):
         form = self.form_class(request.POST)
 
         if form.is_valid():
-            user = EduGalaxyUser()
 
-            user_email1 = form.cleaned_data['user_email1']
-            user_email2 = form.cleaned_data['user_email2']
-            select_email = form.cleaned_data['select_email']
-            age = form.cleaned_data['user_age']
-
-            if user_email2:
-                user.user_email = user_email1 + "@" + user_email2
-            else:
-                user.user_email = user_email1 + "@" + select_email
-
-            user.user_nickname = form.cleaned_data['user_nickname']
-            user.password = form.cleaned_data['password1']
-            user.user_age = int(age)
-            user.user_job = form.cleaned_data['user_job']
-
-            user.save()
-
-            return HttpResponseRedirect(self.seccess_url)
+            return self.form_valid(form)
         else:
             return self.form_invalid(form)
-    #
-    # def form_valid(self, form, request):
 
-        # response = super().form_valid(form)
-        #
+    def form_valid(self, form):
+
+        user = form.save(commit=False)
+        user.user_signup_ip = self.request.META['REMOTE_ADDR']
+        user.set_password(form.cleaned_data["password1"])
+        # response = super(self.form_class, self).form_valid(form)
+
         # if form.instance:
-        #     self.send_verification_email(form.instance)
-        #
-        # return response
+        user.save()
+            # self.send_verification_email(form.instance)
+
+        return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
