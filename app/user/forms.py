@@ -40,8 +40,7 @@ class EduGalaxyUserCreationForm(forms.Form):
     user_email2 = forms.CharField(widget=forms.TextInput(
             attrs={
                 'id': 'user_email2',
-                'disabled': 'disabled',
-                'readonly': 'readonly'}
+                'disabled': 'disabled'}
         )
     )
 
@@ -108,8 +107,31 @@ class EduGalaxyUserCreationForm(forms.Form):
             )
         return password2
 
+
     def save(self, commit=True):
-        user = EduGalaxyUser(**self.cleaned_data)
+
+        email1 = self.cleaned_data.get("user_email1")
+        email2 = self.cleaned_data.get("user_email2")
+
+        password = self.cleaned_data.get("password1")
+        nickname = self.cleaned_data.get("user_nickname")
+
+        str_age = self.cleaned_data.get("user_age")
+        job = self.cleaned_data.get("user_job")
+        phone = self.cleaned_data.get("user_phone")
+        receive_email = self.cleaned_data.get("user_receive_email")
+
+        email = email1 + "@" + email2
+        age = int(str_age)
+
+        user = EduGalaxyUser(
+            user_email=email,
+            password=password,
+            user_nickname=nickname,
+            user_age=age,
+            user_job=job,
+            user_phone=phone,
+            user_receive_email=receive_email)
 
         if commit:
             user.save()

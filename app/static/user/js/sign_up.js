@@ -8,7 +8,7 @@ function Change_Email(){
 
     if(sel=="direct"){
         sel = "";
-	readonly = 0;
+        readonly = 0;
     }
 
     if(sel=="select"){
