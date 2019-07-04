@@ -1,6 +1,7 @@
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
-from django.views.generic.edit import CreateView, View
+from django.shortcuts import render
+from django.views.generic.edit import FormView, View
 from django.views.generic.base import TemplateView
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model, login
@@ -12,20 +13,43 @@ from django.middleware.csrf import _compare_salted_tokens
 
 from .mixins import VerificationEmailMixin
 from .forms import EduGalaxyUserCreationForm
+from .models import EduGalaxyUser
 
 
-class EduGalaxyUserCreateView(CreateView, VerificationEmailMixin):
-    template_name = 'registration/signup.html'
+class EduGalaxyUserCreateView(FormView, VerificationEmailMixin):
     form_class = EduGalaxyUserCreationForm
-    # 수정 필요
+    template_name = 'registration/signup.html'
     success_url = reverse_lazy('user:login')
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        if form.instance:
-            self.send_verification_email(form.instance)
-        return response
 
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(initial=self.initial)
+        context = {'form': form}
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+
+        user = form.save(commit=False)
+        user.user_signup_ip = self.request.META['REMOTE_ADDR']
+        user.set_password(form.cleaned_data["password1"])
+        # response = super(self.form_class, self).form_valid(form)
+
+        # if form.instance:
+        user.save()
+            # self.send_verification_email(form.instance)
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class EduGalaxyUserVerificationView(TemplateView):
