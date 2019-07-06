@@ -8,16 +8,16 @@ from django.contrib.auth import get_user_model, login
 from django.contrib import messages
 
 # social auth
-from user.oauth.providers.naver import NaverLoginMixin
+from .oauth.providers.naver import NaverLoginMixin
 from django.middleware.csrf import _compare_salted_tokens
 
 from .mixins import VerificationEmailMixin
-from .forms import EduGalaxyUserCreationForm
+from .forms import EduUserCreationForm
 
 
-class EduGalaxyUserCreateView(FormView, VerificationEmailMixin):
-    form_class = EduGalaxyUserCreationForm
-    template_name = 'registration/signup.html'
+class EduUserCreateView(FormView, VerificationEmailMixin):
+    form_class = EduUserCreationForm
+    template_name = 'user/signup.html'
     success_url = reverse_lazy('user:login')
 
     def get(self, request, *args, **kwargs):
@@ -51,7 +51,7 @@ class EduGalaxyUserCreateView(FormView, VerificationEmailMixin):
             """If the form is valid, save the associated model."""
             self.object = form.save()
             return super().form_valid(form)
-        request.POST 값이 들어있는 form(POST값을 머금은 EduGalaxyUser)을 save()함
+        request.POST 값이 들어있는 form(POST값을 머금은 EduUser)을 save()함
         
         여기서 super().form_valid(form)은 
         FormMixin에서 
@@ -71,7 +71,7 @@ class EduGalaxyUserCreateView(FormView, VerificationEmailMixin):
         if form_class is None:
             form_class = self.get_form_class()
         return form_class(**self.get_form_kwargs())
-        리턴값을 우리 코드로 다시 써보면 EduGalaxyUser({'instance': self.object, ...})
+        리턴값을 우리 코드로 다시 써보면 EduUser({'instance': self.object, ...})
         ModelFormMixin에서 타고타고 올라가다보면 
         BaseForm에 __init__메서드(생성자) 파라미터 여러 개 중에 하나가 instance인걸로 봐선
         어딘가에서 쿼리셋을 키값의 이름을 가진 변수에 밸류값을 넣는 코드가 있을 것으로 판단됨.
@@ -87,7 +87,7 @@ class EduGalaxyUserCreateView(FormView, VerificationEmailMixin):
         return self.render_to_response(self.get_context_data(form=form))
 
 
-class EduGalaxyUserVerificationView(TemplateView):
+class EduUserVerificationView(TemplateView):
     model = get_user_model()
     token_generator = default_token_generator
 
@@ -122,12 +122,12 @@ class ResendVerificationEmailView(View, VerificationEmailMixin):
             else:
                 self.send_verification_email(user)
 
-        return HttpResponseRedirect(reverse('eduGalaxy:index'))
+        return HttpResponseRedirect(reverse('school:index'))
 
 
 class SocialLoginCallbackView(NaverLoginMixin, View):
 
-    success_url = reverse_lazy('eduGalaxy:index')
+    success_url = reverse_lazy('school:index')
     failure_url = reverse_lazy('user:login')
     required_profiles = ['email', 'gender']
     model = get_user_model()
