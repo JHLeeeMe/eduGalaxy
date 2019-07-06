@@ -4,15 +4,15 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
-from .models import EduGalaxyUser
+from .models import EduUser
 
 
-class EduGalaxyUserCreationForm(forms.ModelForm):
+class EduUserCreationForm(forms.ModelForm):
     password1 = forms.CharField(label='비밀번호', widget=forms.PasswordInput)
     password2 = forms.CharField(label='비밀번호 확인', widget=forms.PasswordInput)
 
     class Meta:
-        model = EduGalaxyUser
+        model = EduUser
         fields = ('user_email', 'user_nickname')
 
     def clean_password2(self):
@@ -32,21 +32,21 @@ class EduGalaxyUserCreationForm(forms.ModelForm):
         return user
 
 
-class EduGalaxyUserChangeForm(forms.ModelForm):
+class EduUserChangeForm(forms.ModelForm):
 
     password = ReadOnlyPasswordHashField()
 
     class Meta:
-        model = EduGalaxyUser
+        model = EduUser
         fields = ('user_email', 'password', 'user_nickname', 'is_active', 'is_admin')
 
     def clean_password(self):
         return self.initial['password']
 
 
-class EduGalaxyUserAdmin(BaseUserAdmin):
-    form = EduGalaxyUserChangeForm
-    add_form = EduGalaxyUserCreationForm
+class EduUserAdmin(BaseUserAdmin):
+    form = EduUserChangeForm
+    add_form = EduUserCreationForm
 
     list_display =(
         'id',
@@ -84,31 +84,7 @@ class EduGalaxyUserAdmin(BaseUserAdmin):
     filter_horizontal = ()
 
 
-admin.site.register(EduGalaxyUser, EduGalaxyUserAdmin)
+admin.site.register(EduUser, EduUserAdmin)
 admin.site.unregister(Group)
 
-# 주소명 DB 관리(현 보류)
 
-# class DeveloperSite(admin.AdminSite):
-#     site_header = "EduGalaxy Developers.."
-#     site_title = "EduGalaxy 개발자 사이트 / 안전제일..."
-#     index_title = "Good Luck.."
-#
-#
-# class DeveloperInline(admin.StackedInline):
-#     model = AddressSelect
-#
-#
-# developer_site = DeveloperSite(name='dev')
-#
-#
-# class AddressSelectAdmin(admin.ModelAdmin):
-#     list_display = ['id', 'province', 'city', 'dong']
-#     list_per_page = 15
-#     list_filter = ['province', 'city']
-#
-#     ordering = ('province',)
-#     filter_horizontal = ()
-#
-#
-# developer_site.register(AddressSelect, AddressSelectAdmin)
