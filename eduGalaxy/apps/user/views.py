@@ -8,19 +8,17 @@ from django.contrib.auth import get_user_model, login
 from django.contrib import messages
 
 # social auth
-from user.oauth.providers.naver import NaverLoginMixin
+from .oauth.providers.naver import NaverLoginMixin
 from django.middleware.csrf import _compare_salted_tokens
 
 from .mixins import VerificationEmailMixin
-from .forms import EduGalaxyUserCreationForm
-from .models import EduGalaxyUser
+from .forms import EduUserCreationForm
 
 
-class EduGalaxyUserCreateView(FormView, VerificationEmailMixin):
-    form_class = EduGalaxyUserCreationForm
-    template_name = 'registration/signup.html'
+class EduUserCreateView(FormView, VerificationEmailMixin):
+    form_class = EduUserCreationForm
+    template_name = 'user/signup.html'
     success_url = reverse_lazy('user:login')
-
 
     def get(self, request, *args, **kwargs):
         form = self.form_class(initial=self.initial)
@@ -36,23 +34,60 @@ class EduGalaxyUserCreateView(FormView, VerificationEmailMixin):
             return self.form_invalid(form)
 
     def form_valid(self, form):
-
         user = form.save(commit=False)
         user.user_signup_ip = self.request.META['REMOTE_ADDR']
         user.set_password(form.cleaned_data["password1"])
         # response = super(self.form_class, self).form_valid(form)
 
-        # if form.instance:
         user.save()
-            # self.send_verification_email(form.instance)
-
+        self.send_verification_email(user)
         return HttpResponseRedirect(self.get_success_url())
+
+    # def form_valid(self, form):
+    '''
+        class ModelFormMixin(FormMixin, SingleObjectMixin)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        def form_valid(self, form):
+            """If the form is valid, save the associated model."""
+            self.object = form.save()
+            return super().form_valid(form)
+        request.POST 값이 들어있는 form(POST값을 머금은 EduUser)을 save()함
+        
+        여기서 super().form_valid(form)은 
+        FormMixin에서 
+        def form_valid(self, form):
+        """If the form is valid, redirect to the supplied URL."""
+            return HttpResponseRedirect(self.get_success_url())
+        이렇게 정의 돼있음
+        
+        즉, ModelFormMixin을 상속받는 CreateView를 상속받지 않았으므로 request.POST를 모델에 저장하는 코드 필요.
+        
+        form.instance는 
+        modelFormMixin에서 get_form_kwargs()메서드를 정의할 때 
+        'instance'라는 이름으로 self.object(form_valid메서드에서의 그 것)를 딕셔너리(쿼리셋)형태로 집어넣고 리턴해줌
+        get_form_kwargs()메서드는 FormMixin의 get_form() 메서드에서 쓰임   
+        def get_form(self, form_class=None):
+        """Return an instance of the form to be used in this view."""
+        if form_class is None:
+            form_class = self.get_form_class()
+        return form_class(**self.get_form_kwargs())
+        리턴값을 우리 코드로 다시 써보면 EduUser({'instance': self.object, ...})
+        ModelFormMixin에서 타고타고 올라가다보면 
+        BaseForm에 __init__메서드(생성자) 파라미터 여러 개 중에 하나가 instance인걸로 봐선
+        어딘가에서 쿼리셋을 키값의 이름을 가진 변수에 밸류값을 넣는 코드가 있을 것으로 판단됨.
+        
+        결론은 form.instance는 form.save() -> user.save() 이다.
+    '''
+    #     response = super().form_valid(form)  # response == HttpResponseRedirect(self.get_success_url())
+    #     if form.instance:
+    #         self.send_verification_email(form.instance)
+    #     return response
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
 
 
-class EduGalaxyUserVerificationView(TemplateView):
+class EduUserVerificationView(TemplateView):
     model = get_user_model()
     token_generator = default_token_generator
 
@@ -87,18 +122,18 @@ class ResendVerificationEmailView(View, VerificationEmailMixin):
             else:
                 self.send_verification_email(user)
 
-        return HttpResponseRedirect(reverse('eduGalaxy:index'))
+        return HttpResponseRedirect(reverse('school:index'))
 
 
 class SocialLoginCallbackView(NaverLoginMixin, View):
 
-    success_url = reverse_lazy('eduGalaxy:index')
+    success_url = reverse_lazy('school:index')
     failure_url = reverse_lazy('user:login')
     required_profiles = ['email', 'gender']
     model = get_user_model()
     oauth_user_id = None
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, **kwargs):
 
         provider = kwargs.get('provider')
         success_url = request.GET.get('next', self.success_url)
