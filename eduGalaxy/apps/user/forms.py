@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import ugettext as _
 
-from .models import EduGalaxyUser
+from .models import EduUser
 
 
 EMAIL_LIST = (
@@ -28,7 +28,7 @@ JOB_LIST = (
 )
 
 
-class EduGalaxyUserCreationForm(forms.Form):
+class EduUserCreationForm(forms.Form):
     user_email1 = forms.CharField(widget=forms.TextInput(
             attrs={
                 'autofocus': 'autofocus',
@@ -124,7 +124,7 @@ class EduGalaxyUserCreationForm(forms.Form):
         email = email1 + "@" + email2
         age = int(str_age)
 
-        user = EduGalaxyUser(
+        user = EduUser(
             user_email=email,
             password=password,
             user_nickname=nickname,

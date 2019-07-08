@@ -6,7 +6,7 @@ from config import settings
 
 
 class VerificationEmailMixin:
-    email_template_name = 'registration/verification.html'
+    email_template_name = 'user/verification.html'
     token_generator = default_token_generator
 
     def send_verification_email(self, user):
