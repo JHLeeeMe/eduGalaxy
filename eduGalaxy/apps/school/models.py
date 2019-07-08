@@ -35,3 +35,4 @@ class SchoolInfo(models.Model):
 
     def __str__(self):
         return self.sch_name
+
