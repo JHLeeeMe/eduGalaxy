@@ -1,0 +1,16 @@
+{% extends 'admin/base.html' %}
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+{% block content %}
+    <div>
+        <form action="." method="POST">
+            {% csrf_token %}
+            {{ form.csv_select.label_tag }}&nbsp;&nbsp;
+            {{ form.csv_select }}
+            <br><br><br>
+            <button type="submit">CSV DB 저장</button>
+        </form>
+    </div>
+    <br />
+
+{% endblock %}
