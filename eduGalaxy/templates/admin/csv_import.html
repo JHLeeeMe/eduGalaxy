@@ -1,0 +1,14 @@
+{% extends 'admin/base.html' %}
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+{% block content %}
+    <div>
+        <form action="." method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">CSV Upload</button>
+        </form>
+    </div>
+    <br />
+
+{% endblock %}

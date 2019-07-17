@@ -107,7 +107,6 @@ class EduUserCreationForm(forms.Form):
             )
         return password2
 
-
     def save(self, commit=True):
 
         email1 = self.cleaned_data.get("user_email1")
