@@ -1,5 +1,5 @@
 from apps.school.models import SchoolInfo, SchoolCsvFile
-from django import forms
+from apps.school.forms import SaveCSVForm, UploadFileForm
 from django.contrib import admin
 from django.urls import path
 from django.shortcuts import render, redirect
@@ -8,82 +8,6 @@ from django.contrib import messages
 
 import csv
 import os
-
-
-class UploadFileForm(forms.ModelForm):
-    class Meta:
-        model = SchoolCsvFile
-        fields = ('file', 'file_use')
-
-    def __init__(self, *args, **kwargs):
-        super(UploadFileForm, self).__init__(*args, **kwargs)
-        self.fields['file'].required = True
-
-
-class SaveCSVForm(forms.Form):
-
-    csv_dint = SchoolCsvFile.objects.filter().values('id', 'file').order_by('file')
-
-    select_file = [
-        ["default", "파일 선택"]
-    ]
-
-    for csv_list in csv_dint:
-        csv_file = csv_list['file']
-        select_file.append([csv_list['id'], csv_file[16:]])
-
-    csv_select = forms.CharField(
-        widget=forms.Select(
-            choices=tuple(select_file),
-            attrs={'id': 'csv_select'}
-        ),
-        label="CSV 파일 리스트"
-    )
-
-    def save(self, row, commit=True):
-        school = SchoolInfo()
-        school.sch_ooe = row[0]
-        school.sch_lea = row[1]
-        school.sch_location = row[2]
-
-        school.sch_code = row[3]
-        school.sch_name = row[4]
-        school.sch_grade_code = int(row[5])
-
-        school.sch_estab_div = row[6]
-        school.sch_char = row[7]
-
-        if row[8] == 'Y':
-            school.sch_has_branches = True
-        else:
-            school.sch_has_branches = False
-
-        school.sch_estab_type = row[9]
-        school.sch_day_n_night = row[10]
-        school.sch_anniversary = row[11]
-
-        school.sch_estab_date = row[12]
-        school.sch_dong_code = row[13]
-        school.sch_address1 = row[14]
-
-        school.sch_address2 = row[15]
-        school.sch_zip_code = row[16]
-        school.sch_zip_code_st = row[17]
-
-        school.sch_address1_st = row[18]
-        school.sch_address2_st = row[19]
-        school.sch_lat = float(row[20])
-
-        school.sch_lng = float(row[21])
-        school.sch_phone = row[22]
-        school.sch_fax = row[23]
-
-        school.sch_homepage = row[24]
-        school.sch_gonghak = row[25]
-
-        if commit:
-            school.save()
-        return school
 
 
 class SchoolCsvFileAdmin(admin.ModelAdmin):
@@ -123,15 +47,16 @@ class SchoolCsvFileAdmin(admin.ModelAdmin):
         if request.method == "POST":
             form = SaveCSVForm(request.POST)
             file = 'media/'
+
             if form.is_valid():
                 file_id = form.cleaned_data['csv_select']
-                file_name = SchoolCsvFile.objects.filter(pk=file_id).values_list('file', flat=True)
-                file = file + file_name[0]
 
-                if file_id == "default":
+                if file_id == '0':
                     messages.error(request, "파일을 선택하세요")
                     form = SaveCSVForm()
                     return render(request, "admin/csv_list.html", {'form': form})
+                file_name = SchoolCsvFile.objects.filter(pk=file_id).values_list('file', flat=True)
+                file = file + file_name[0]
 
                 if 'save' in request.POST:
                     with open(file, encoding='euc-kr') as f:
@@ -146,12 +71,16 @@ class SchoolCsvFileAdmin(admin.ModelAdmin):
                     self.message_user(request, "school DB 저장완료")
                     return redirect("..")
                 elif 'delete' in request.POST:
+                    if file_id == 0:
+                        messages.error(request, "파일을 선택하세요")
+                        form = SaveCSVForm()
+                        return render(request, "admin/csv_list.html", {'form': form})
                     csv_file = SchoolCsvFile(pk=file_id)
                     csv_file.delete()
                     if os.path.isfile(file):
                         os.remove(file)
                     self.message_user(request, "해당 파일 삭제")
-                    return redirect("..")
+                return redirect("..")
         else:
             form = SaveCSVForm()
         return render(request, "admin/csv_list.html", {'form': form})
