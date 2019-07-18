@@ -1,5 +1,7 @@
 from django.db import models
 from django import forms
+from django.utils import timezone
+from ..user.models import EduUser
 
 
 def csv_select_validator(value):
@@ -63,3 +65,23 @@ class SchoolCsvFile(models.Model):
 
     def __str__(self):
         return self.file_name
+
+
+class UserPost(models.Model):
+    title = models.CharField(verbose_name='제목', max_length=20)
+    content = models.TextField(verbose_name='내용')
+    created_date = models.DateTimeField(verbose_name='생성날짜', default=timezone.now)
+
+    edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
+    school_info = models.ForeignKey(SchoolInfo, on_delete=models.CASCADE)
+
+
+class AdminPost(models.Model):
+    logo = models.CharField(verbose_name='학교로고 파일명', max_length=100)
+    modified_date = models.DateTimeField(blank=True, null=True)
+
+    edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
+    school_info = models.ForeignKey(SchoolInfo, on_delete=models.CASCADE)
+
+    # def __str__(self):
+    #     return self.school_info

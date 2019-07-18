@@ -88,7 +88,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',  # use mysql (not sqlite)
         'OPTIONS': {
-            'read_default_file': os.path.join(BASE_DIR, "config/my.conf"),
+            # 'read_default_file': os.path.join(BASE_DIR, "config/my.conf"),
+            'read_default_file': '/keys/my.conf',
             'init_command': 'SET sql_mode="STRICT_TRANS_TABLES"'
         }
     }
@@ -146,7 +147,8 @@ EMAIL_USE_TLS = True
 # Social Auth
 
 # secret 보안
-SECRETS_PATH = os.path.join(BASE_DIR, 'config/secrets.json')
+# SECRETS_PATH = os.path.join(BASE_DIR, 'config/secrets.json')
+SECRETS_PATH = '/keys/secrets.json'
 secrets = json.loads(open(SECRETS_PATH).read())
 
 # settings 모듈에 동적으로 할당
