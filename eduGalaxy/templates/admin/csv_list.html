@@ -1,0 +1,18 @@
+{% extends 'admin/base.html' %}
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+{% block content %}
+    <div>
+        <form action="." method="POST">
+            {% csrf_token %}
+            {{ form.csv_select.label_tag }}&nbsp;&nbsp;
+            {{ form.csv_select }}
+            <br><br><br>
+            <input type="submit" name="save" value="CSV DB 저장">
+            <input type="submit" name="delete" value="CSV파일 삭제">
+            <input type="button" value="뒤로" onclick="javascript:history.back(-1);">
+        </form>
+    </div>
+    <br />
+
+{% endblock %}
