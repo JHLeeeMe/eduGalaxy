@@ -75,6 +75,7 @@ class SchoolCsvFile(models.Model):
         return self.file_name
 
 
+
 # 학교 관계자 게시판
 class AdminPost(models.Model):
     logo = models.CharField(verbose_name='학교로고 파일명', max_length=100)
@@ -100,4 +101,5 @@ class UserPost(models.Model):
 
     edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
     adminPost = models.ForeignKey(AdminPost, on_delete=models.CASCADE)
+
 
