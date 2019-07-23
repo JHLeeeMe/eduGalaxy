@@ -1,5 +1,8 @@
 from django.db import models
 from django import forms
+from django.utils import timezone
+
+from apps.user.models import EduUser
 
 
 def csv_select_validator(value):
@@ -63,4 +66,31 @@ class SchoolCsvFile(models.Model):
 
     def __str__(self):
         return self.file_name
+
+
+# 학교 관계자 게시판
+class AdminPost(models.Model):
+    logo = models.CharField(verbose_name='학교로고 파일명', max_length=100)
+    created_date = models.DateTimeField(verbose_name='생성날짜', default=timezone.now)
+    created_ip = models.CharField(verbose_name='게시판 생성 ip', max_length=20)
+
+    modified_date = models.DateTimeField(verbose_name='수정날짜', blank=True, null=True)
+    modified_ip = models.CharField(verbose_name='게시판 수정 ip', max_length=20)
+
+    edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
+    school_info = models.ForeignKey(SchoolInfo, on_delete=models.CASCADE)
+
+
+# 사용자 리뷰
+class UserPost(models.Model):
+    title = models.CharField(verbose_name='제목', max_length=20)
+    content = models.TextField(verbose_name='내용')
+    created_date = models.DateTimeField(verbose_name='생성날짜', default=timezone.now)
+    created_ip = models.CharField(verbose_name='게시판 생성 ip', max_length=20)
+
+    modified_date = models.DateTimeField(verbose_name='수정날짜', blank=True, null=True)
+    modified_ip = models.CharField(verbose_name='게시판 수정 ip', max_length=20)
+
+    edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
+    adminPost = models.ForeignKey(AdminPost, on_delete=models.CASCADE)
 
