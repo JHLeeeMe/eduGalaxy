@@ -11,8 +11,9 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css">
 	<link rel="stylesheet" type="text/css" href="/static/eduGalaxy/css/eduStyle.css" />
 	<style>
-		.page-header {
+		.jumbotron {
 			background-color: #f4511e; /* Orange */
+			color: #ffffff;
 		}
 		.globalFooter {
 			position: absolute;
@@ -27,31 +28,60 @@
         {% endblock %}
     </head>
     <body>
-        <div class="globalHeader">
-            <div class="jumbotron jumbotron-fulid text-center">
-                <!--<h1>is_authenticated: {{ request.user.is_authenticated }}</h1>-->
-                <!--<h1>user_email: {{ request.user.user_email }}</h1>-->
-                <!--<h1>user_confirm: {{ request.user.user_confirm }}</h1>-->
-                <!--<h1>user_nickname: {{ request.user.user_nickname }}</h1>-->
-                <h1 class="animated fadeInDown">
-                    <!--<a href="{% url 'school:index' %}">에듀갤럭시 </a>-->
-                    에듀갤럭시
-                </h1>
+		<div class="globalHeader">
+			<nav class="navbar navbar-default navbar-fixed-top">
+				<div class="container">
+				  <div class="navbar-header">
+					<a class="navbar-brand" href="{% url 'school:index' %}">EduGalaxy</a>
+					<ul class="nav navbar-nav navbar-left">
+					  <li><a href="{% url 'school:post_list' %}">학교</a></li>
+					</ul>
+				  </div>
+				  <div class="collapse navbar-collapse" id="myNavbar">
+					<ul class="nav navbar-nav navbar-right">
+					  {% if request.user.is_authenticated %}
+						<li><a href="#">myPage</a></li>
+						<li><a href="{% url 'user:logout' %}">Sign Out</a></li>
+						{% if not request.user.user_confirm %}
+						  {{ request.user.user_nickname }}님, 가입하신 이메일로 인증메일을 발송 하였습니다.
+						  <a href="{% url 'user:resend' %}">
+							<div class="form-actions">
+							  <button class="btn btn-primary btn-large" type="submit">재발송</button>
+							</div>
+						  </a>
+						{% endif %}
+					  {% else %}
+						<li><a href="{% url 'user:login' %}">Sign In</a></li>
+						<li><a href="{% url 'user:signup' %}">Sign Up</a></li>
+					  {% endif %}
+					</ul>
+				  </div>
+				</div>
+			</nav>
+			<div class="jumbotron jumbotron-fulid text-center">
+				<!--<h1>is_authenticated: {{ request.user.is_authenticated }}</h1>-->
+				<!--<h1>user_email: {{ request.user.user_email }}</h1>-->
+				<!--<h1>user_confirm: {{ request.user.user_confirm }}</h1>-->
+				<!--<h1>user_nickname: {{ request.user.user_nickname }}</h1>-->
+
+				<h1 class="animated fadeInDown">
+					에듀갤럭시
+				</h1>
             </div>
-            {% block gheader %}
-            {% endblock gheader %}
-	</div>
-	<div class="globalBody">
-            {% block gbody %}
-            {% endblock gbody %}
-	</div>
-        <footer class="globalFooter">
-            <div class="content-fulid text-center">
-                Footer
-            </div>
-            {% block gfooter %}
-            {% endblock gfooter %}
-        </footer>
+			{% block gheader %}
+       		{% endblock gheader %}
+		</div>
+		<div class="globalBody">
+			{% block gbody %}
+			{% endblock gbody %}
+		</div>
+		<footer class="globalFooter">
+			<div class="content-fulid text-center">
+				Footer
+			</div>
+			{% block gfooter %}
+			{% endblock gfooter %}
+		</footer>
     </body>
 </html>
 

@@ -1,4 +1,4 @@
-from apps.school.models import SchoolInfo, SchoolCsvFile
+from apps.school.models import SchoolInfo, SchoolCsvFile, AdminPost, UserPost
 from apps.school.forms import SaveCSVForm, UploadFileForm
 from django.contrib import admin
 from django.urls import path
@@ -88,4 +88,5 @@ class SchoolCsvFileAdmin(admin.ModelAdmin):
 
 admin.site.register(SchoolCsvFile, SchoolCsvFileAdmin)
 admin.site.register(SchoolInfo)
-
+admin.site.register(AdminPost)
+admin.site.register(UserPost)

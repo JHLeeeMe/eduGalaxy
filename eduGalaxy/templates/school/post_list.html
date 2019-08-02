@@ -1,0 +1,33 @@
+{% extends 'school/base.html' %}
+
+{% block head_title %}
+    <title>post_list.html</title>
+{% endblock head_title %}
+
+{% block gheader %}
+{% endblock gheader %}
+
+{% block gbody %}
+    <table border="4" align="center">
+        <tr bgcolor="black" align="center">
+            <p>
+                <td style="color:white" colspan="2"> 학교명 </td>
+                <td style="color:white"> 게시날짜 </td>
+                <td style="color:white"> 리뷰갯수 </td>
+            </p>
+        </tr>
+        {% for post in posts %}
+            <tr align="center">
+                <td>img</td>
+                <td>
+                    <a href="{% url 'school:post_detail' pk=post.pk %}">{{ post.school_info.sch_name }}</a>
+                </td>
+                <td>{{ post.created_date }}</td>
+                <td>0</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock gbody %}
+
+{% block gfooter %}
+{% endblock gfooter %}
