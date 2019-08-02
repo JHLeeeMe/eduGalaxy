@@ -1,11 +1,12 @@
 from django.urls import path
-from . import views
+from apps.school import views as school_view
 
 
 app_name = 'school'
 
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('post/<int:pk>/', views.post_detail, name='post_detail')
+    path('', school_view.index, name='index'),
+    path('post/', school_view.AdminPostList.as_view(), name='post_list'),
+    path('post/<int:pk>/', school_view.post_detail, name='post_detail')
 ]
 
