@@ -11,12 +11,15 @@ def csv_select_validator(value):
 
 
 class SchoolInfo(models.Model):
+
     sch_ooe = models.CharField(verbose_name='시도교육청', max_length=30)
     sch_lea = models.CharField(verbose_name='지역교육청', max_length=20)
     sch_location = models.CharField(verbose_name='지역', max_length=20)
     sch_code = models.CharField(verbose_name='정보공시 학교코드', max_length=20)
     sch_name = models.CharField(verbose_name='학교명', max_length=20, null=False)
+
     sch_grade_code = models.IntegerField(default=0, verbose_name='학교급코드', null=False)
+
     sch_estab_div = models.CharField(verbose_name='설립구분', max_length=4, null=False)
     sch_char = models.CharField(verbose_name='학교특성', max_length=15)
     sch_has_branches = models.BooleanField(
@@ -25,6 +28,7 @@ class SchoolInfo(models.Model):
         null=False)
     sch_estab_type = models.CharField(verbose_name='설립유형', max_length=4, null=False)
     sch_day_n_night = models.CharField(verbose_name='주야구분', max_length=4, null=False)
+
     sch_anniversary = models.CharField(verbose_name='개교기념일', max_length=8, null=False)
     sch_estab_date = models.CharField(verbose_name='설립일', max_length=8, null=False)
     sch_dong_code = models.CharField(verbose_name='법정동코드', max_length=10, null=False)
@@ -40,10 +44,13 @@ class SchoolInfo(models.Model):
     sch_fax = models.CharField(verbose_name='팩스번호', max_length=20)
     sch_homepage = models.CharField(verbose_name='홈페이지주소', max_length=40)
     sch_gonghak = models.CharField(verbose_name='남녀공학 구분', max_length=10, null=False)
+
     published_date = models.DateTimeField(blank=True, null=True)
+
 
     def __str__(self):
         return self.sch_name
+
 
     class Meta:
         verbose_name = '학교'
@@ -66,6 +73,7 @@ class SchoolCsvFile(models.Model):
 
     def __str__(self):
         return self.file_name
+
 
 
 # 학교 관계자 게시판
@@ -93,4 +101,5 @@ class UserPost(models.Model):
 
     edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
     adminPost = models.ForeignKey(AdminPost, on_delete=models.CASCADE)
+
 
