@@ -10,34 +10,14 @@
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css">
 	<link rel="stylesheet" type="text/css" href="/static/eduGalaxy/css/eduStyle.css" />
-	<style>
-		.page-header {
-			background-color: #f4511e; /* Orange */
-		}
-		.globalFooter {
-			position: absolute;
-			bottom: 0;
-			left: 0;
-			right: 0;
-			color: white;
-			background-color: #333333;
-		}
-	</style>
         {% block head_title %}
         {% endblock %}
     </head>
     <body>
+	{% include 'school/admin_details.html' %}
+######################################<br>
+	{% include 'school/user_details.html' %}
         <div class="globalHeader">
-            <div class="jumbotron jumbotron-fulid text-center">
-                <!--<h1>is_authenticated: {{ request.user.is_authenticated }}</h1>-->
-                <!--<h1>user_email: {{ request.user.user_email }}</h1>-->
-                <!--<h1>user_confirm: {{ request.user.user_confirm }}</h1>-->
-                <!--<h1>user_nickname: {{ request.user.user_nickname }}</h1>-->
-                <h1 class="animated fadeInDown">
-                    <!--<a href="{% url 'school:index' %}">에듀갤럭시 </a>-->
-                    에듀갤럭시
-                </h1>
-            </div>
             {% block gheader %}
             {% endblock gheader %}
 	</div>
