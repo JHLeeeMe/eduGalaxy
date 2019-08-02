@@ -46,10 +46,8 @@ class SchoolInfo(models.Model):
     sch_gonghak = models.CharField(verbose_name='남녀공학 구분', max_length=10, null=False)
     published_date = models.DateTimeField(default=timezone.now, blank=True, null=True)
 
-
     def __str__(self):
         return self.sch_name
-
 
     class Meta:
         verbose_name = '학교'
@@ -87,8 +85,8 @@ class AdminPost(models.Model):
     edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
     school_info = models.ForeignKey(SchoolInfo, on_delete=models.CASCADE)
 
-    def __str__(self):
-        return self.school_info.sch_name
+    # def __str__(self):
+    #     return self.school_info.sch_name
 
 
 # 사용자 리뷰

@@ -146,10 +146,6 @@ EMAIL_USE_TLS = True
 # Social Auth
 
 # secret 보안
-<<<<<<< HEAD
-# SECRETS_PATH = os.path.join(BASE_DIR, 'config/secrets.json')
-=======
->>>>>>> master
 SECRETS_PATH = '/keys/secrets.json'
 secrets = json.loads(open(SECRETS_PATH).read())
 
