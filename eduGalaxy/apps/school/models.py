@@ -39,7 +39,7 @@ class SchoolInfo(models.Model):
     sch_fax = models.CharField(verbose_name='팩스번호', max_length=20)
     sch_homepage = models.CharField(verbose_name='홈페이지주소', max_length=40)
     sch_gonghak = models.CharField(verbose_name='남녀공학 구분', max_length=10, null=False)
-    published_date = models.DateTimeField(blank=True, null=True)
+    published_date = models.DateTimeField(default=timezone.now, blank=True, null=True)
 
     def __str__(self):
         return self.sch_name
@@ -67,17 +67,8 @@ class SchoolCsvFile(models.Model):
         return self.file_name
 
 
-class UserPost(models.Model):
-    title = models.CharField(verbose_name='제목', max_length=20)
-    content = models.TextField(verbose_name='내용')
-    created_date = models.DateTimeField(verbose_name='생성날짜', default=timezone.now)
-
-    edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
-    school_info = models.ForeignKey(SchoolInfo, on_delete=models.CASCADE)
-
-
 class AdminPost(models.Model):
-    logo = models.CharField(verbose_name='학교로고 파일명', max_length=100)
+    logo = models.CharField(verbose_name='학교로고 파일명', max_length=100, null=True)
     modified_date = models.DateTimeField(blank=True, null=True)
 
     edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
@@ -85,3 +76,14 @@ class AdminPost(models.Model):
 
     # def __str__(self):
     #     return self.school_info
+
+
+class UserPost(models.Model):
+    title = models.CharField(verbose_name='제목', max_length=20)
+    content = models.TextField(verbose_name='내용')
+    created_date = models.DateTimeField(verbose_name='생성날짜', default=timezone.now)
+
+    edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
+    admin_post = models.ForeignKey(AdminPost, on_delete=models.CASCADE)
+
+
