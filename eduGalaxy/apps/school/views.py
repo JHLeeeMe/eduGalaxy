@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404
-from .models import UserPost, AdminPost
-# from .forms import AdminPostForm
+from django.utils import timezone
+from django.views.generic.base import TemplateView
+
+from apps.school.models import AdminPost, UserPost
 
 
 ##############
@@ -32,3 +34,10 @@ def post_detail(request, pk):
 #    user_post = get_object_or_404(UserPost, pk=pk)  # pk에 해당하는 user_post 가 없을 경우 404 return
 
 #    return render(request, 'school/admin_detail.html', {'user_post': user_post})
+class AdminPostList(TemplateView):
+    template_name = 'school/post_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['posts'] = AdminPost.objects.filter(created_date__lte=timezone.now()).order_by('created_date')
+        return context

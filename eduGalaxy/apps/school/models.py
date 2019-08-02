@@ -1,7 +1,8 @@
 from django.db import models
 from django import forms
 from django.utils import timezone
-from ..user.models import EduUser
+
+from apps.user.models import EduUser
 
 
 def csv_select_validator(value):
@@ -10,12 +11,15 @@ def csv_select_validator(value):
 
 
 class SchoolInfo(models.Model):
+
     sch_ooe = models.CharField(verbose_name='시도교육청', max_length=30)
     sch_lea = models.CharField(verbose_name='지역교육청', max_length=20)
     sch_location = models.CharField(verbose_name='지역', max_length=20)
     sch_code = models.CharField(verbose_name='정보공시 학교코드', max_length=20)
     sch_name = models.CharField(verbose_name='학교명', max_length=20, null=False)
+
     sch_grade_code = models.IntegerField(default=0, verbose_name='학교급코드', null=False)
+
     sch_estab_div = models.CharField(verbose_name='설립구분', max_length=4, null=False)
     sch_char = models.CharField(verbose_name='학교특성', max_length=15)
     sch_has_branches = models.BooleanField(
@@ -24,6 +28,7 @@ class SchoolInfo(models.Model):
         null=False)
     sch_estab_type = models.CharField(verbose_name='설립유형', max_length=4, null=False)
     sch_day_n_night = models.CharField(verbose_name='주야구분', max_length=4, null=False)
+
     sch_anniversary = models.CharField(verbose_name='개교기념일', max_length=8, null=False)
     sch_estab_date = models.CharField(verbose_name='설립일', max_length=8, null=False)
     sch_dong_code = models.CharField(verbose_name='법정동코드', max_length=10, null=False)
@@ -41,8 +46,10 @@ class SchoolInfo(models.Model):
     sch_gonghak = models.CharField(verbose_name='남녀공학 구분', max_length=10, null=False)
     published_date = models.DateTimeField(default=timezone.now, blank=True, null=True)
 
+
     def __str__(self):
         return self.sch_name
+
 
     class Meta:
         verbose_name = '학교'
@@ -67,21 +74,33 @@ class SchoolCsvFile(models.Model):
         return self.file_name
 
 
+# 학교 관계자 게시판
 class AdminPost(models.Model):
     logo = models.CharField(verbose_name='학교로고 파일명', max_length=100, null=True)
-    modified_date = models.DateTimeField(blank=True, null=True)
+
+    created_date = models.DateTimeField(verbose_name='생성날짜', default=timezone.now)
+    created_ip = models.CharField(verbose_name='게시판 생성 ip', max_length=20)
+
+    modified_date = models.DateTimeField(verbose_name='수정날짜', blank=True, null=True)
+    modified_ip = models.CharField(verbose_name='게시판 수정 ip', max_length=20)
 
     edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
     school_info = models.ForeignKey(SchoolInfo, on_delete=models.CASCADE)
 
-    # def __str__(self):
-    #     return self.school_info
+    def __str__(self):
+        return self.school_info.sch_name
 
 
+# 사용자 리뷰
 class UserPost(models.Model):
     title = models.CharField(verbose_name='제목', max_length=20)
     content = models.TextField(verbose_name='내용')
+
     created_date = models.DateTimeField(verbose_name='생성날짜', default=timezone.now)
+    created_ip = models.CharField(verbose_name='게시판 생성 ip', max_length=20)
+
+    modified_date = models.DateTimeField(verbose_name='수정날짜', blank=True, null=True)
+    modified_ip = models.CharField(verbose_name='게시판 수정 ip', max_length=20)
 
     edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
     admin_post = models.ForeignKey(AdminPost, on_delete=models.CASCADE)
