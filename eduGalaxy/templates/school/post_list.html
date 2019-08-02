@@ -1,0 +1,64 @@
+{% extends 'school/base.html' %}
+
+{% block head_title %}
+<title>post_list.html</title>
+<style>
+    .jumbotron {
+		background-color: #f4511e; /* Orange */
+		color: #ffffff;
+	}
+</style>
+{% endblock head_title %}
+
+{% block gheader %}
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">EduGalaxy</a>
+                <ul class="nav navbar-nav navbar-left">
+                    <li><a href="#">학교</a></li>
+                </ul>
+            </div>
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <ul class="nav navbar-nav navbar-right">
+                {% if request.user.is_authenticated %}
+                    <li><a href="#">myPage</a></li>
+				    <li><a href="{% url 'user:logout' %}">Sign Out</a></li>
+			        {% if not request.user.user_confirm %}
+                        {{ request.user.user_nickname }}님, 가입하신 이메일로 인증메일을 발송 하였습니다.
+			            <a href="{% url 'user:resend' %}">
+				        <div class="form-actions">
+				            <button class="btn btn-primary btn-large" type="submit">재발송</button>
+				        </div>
+                        </a>
+			        {% endif %}
+			    {% else %}
+                    <li><a href="{% url 'user:login' %}">Sign In</a></li>
+                    <li><a href="{% url 'user:signup' %}">Sign Up</a></li>
+			    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+{% endblock gheader %}
+
+{% block gbody %}
+    <table border="4" align="center">
+        <tr bgcolor="black" align="center">
+            <p>
+                <td style="color:white" colspan="2"> 학교명 </td>
+                <td style="color:white"> 게시날짜 </td>
+                <td style="color:white"> 리뷰갯수 </td>
+            </p>
+        </tr>
+        {% for post in posts %}
+            <tr align="center">
+                <td>img</td>
+                <td>{{ post.school_info.sch_name }}</td>
+                <td>{{ post.created_date }}</td>
+                <td>0</td>
+            </tr>
+        {% endfor %}
+
+    </table>
+{% endblock gbody %}
