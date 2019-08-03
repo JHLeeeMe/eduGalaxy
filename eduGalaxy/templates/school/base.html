@@ -3,30 +3,39 @@
 
 <html>
     <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css">
-	<link rel="stylesheet" type="text/css" href="/static/eduGalaxy/css/eduStyle.css" />
-	<style>
-		.jumbotron {
-			background-color: #f4511e; /* Orange */
-			color: #ffffff;
-		}
-		.globalFooter {
-			position: absolute;
-			bottom: 0;
-			left: 0;
-			right: 0;
-			color: white;
-			background-color: #333333;
-		}
-	</style>
-        {% block head_title %}
-        {% endblock %}
-    </head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css">
+		<link rel="stylesheet" type="text/css" href="/static/eduGalaxy/css/eduStyle.css" />
+		{% block head_title %}
+		{% endblock %}
+		<style>
+			.jumbotron {
+				background-color: #333333; /* Orange */
+				color: #ffffff;
+			}
+
+			.sign {
+				margin-right: auto;
+			}
+
+			.globalHeader {
+				padding-bottom: 50px;  /* navbar의 default height == 50px */
+			}
+
+			.globalFooter {
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				color: white;
+				background-color: #333333;
+			}
+		</style>
+	</head>
     <body>
 		<div class="globalHeader">
 			<nav class="navbar navbar-default navbar-fixed-top">
@@ -43,13 +52,16 @@
 						<li><a href="#">myPage</a></li>
 						<li><a href="{% url 'user:logout' %}">Sign Out</a></li>
 						{% if not request.user.user_confirm %}
-						  {{ request.user.user_nickname }}님, 가입하신 이메일로 인증메일을 발송 하였습니다.
-						  <a href="{% url 'user:resend' %}">
-							<div class="form-actions">
-							  <button class="btn btn-primary btn-large" type="submit">재발송</button>
+								</ul>
+				  			</div>
+							<div class="collapse navbar-collapse" id="myNavbar">
+						  		{{ request.user.user_nickname }}님, 가입하신 이메일로 인증메일을 발송 하였습니다.
+						  			<a href="{% url 'user:resend' %}">
+							  			<button class="btn btn-primary btn-large" type="submit">재발송</button>
+										<!--<div class="form-actions"></div>-->
+									</a>
 							</div>
-						  </a>
-						{% endif %}
+					  {% endif %}
 					  {% else %}
 						<li><a href="{% url 'user:login' %}">Sign In</a></li>
 						<li><a href="{% url 'user:signup' %}">Sign Up</a></li>
@@ -58,6 +70,10 @@
 				  </div>
 				</div>
 			</nav>
+			{% block gheader %}
+       		{% endblock gheader %}
+		</div>
+		<div class="globalBody">
 			<div class="jumbotron jumbotron-fulid text-center">
 				<!--<h1>is_authenticated: {{ request.user.is_authenticated }}</h1>-->
 				<!--<h1>user_email: {{ request.user.user_email }}</h1>-->
@@ -68,10 +84,6 @@
 					에듀갤럭시
 				</h1>
             </div>
-			{% block gheader %}
-       		{% endblock gheader %}
-		</div>
-		<div class="globalBody">
 			{% block gbody %}
 			{% endblock gbody %}
 		</div>
@@ -84,4 +96,3 @@
 		</footer>
     </body>
 </html>
-
