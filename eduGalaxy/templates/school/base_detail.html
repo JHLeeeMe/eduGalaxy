@@ -2,36 +2,144 @@
 {% load static %}
 
 <html>
-    <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css">
-	<link rel="stylesheet" type="text/css" href="/static/eduGalaxy/css/eduStyle.css" />
-        {% block head_title %}
-        {% endblock %}
-    </head>
-    <body>
-	{% include 'school/admin_details.html' %}
-######################################<br>
-	{% include 'school/user_details.html' %}
-        <div class="globalHeader">
-            {% block gheader %}
-            {% endblock gheader %}
-	</div>
-	<div class="globalBody">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/eduGalaxy/css/eduStyle.css"/>
+    {% block head_title %}
+    {% endblock %}
+    <style>
+            <!--.root {-->
+                <!--margin: auto;-->
+            <!--}-->
+            .left-body {
+                float: left;
+                width: 15%;
+            }
+            .right-body {
+                float: right;
+                width: 85%;
+            }
+            .sidebar {
+                <!--position: fixed;-->
+                <!--top: 0;-->
+                left: 0;
+                height: 100vh;
+                background: #333333;
+                color: white;
+            }
+            .globalHeader {
+                <!--position: fixed;-->
+                width: 100%;
+                color: #ffffff;
+                background-color: #333333;
+            }
+            .globalBody {
+            }
+            .footer {
+                position: absolute;
+                bottom: 0;
+                width: 100%;
+                height: 100px;
+                color: white;
+                background-color: #333333;
+            }
+    </style>
+</head>
+<body>
+    <div class="globalHeader">
+        <div class="adminDetail-header">
+            {% include 'school/admin_detail_header.html' %}
+        </div>
+        {% block gheader %}
+        {% endblock gheader %}
+    </div>
+    <div class="globalBody">
+        <!--left-->
+        <div class="left-body">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h3 style="text-align: center; margin: 0px;">Sidebar</h3>
+                </div>
+                <ul class="nav nav-sidebar nav-main">
+                    <li>
+                        <a href="#">학교정보</a>
+                    </li>
+                    <li>
+                        <a href="#">리뷰</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!--right(main)-->
+        <div class="right-body">
+            <div class="col-sm-9">
+                <div class="adminDetail-body">
+                    {% include 'school/admin_detail_body.html' %}
+                </div>
+                <div class="userDetail-body">
+                    {% include 'school/user_detail.html' %}
+                </div>
+            </div>
+            <div class="col-sm-3">
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+                배너배너배너배너배너배너배너배너
+            </div>
             {% block gbody %}
             {% endblock gbody %}
-	</div>
-        <footer class="globalFooter">
-            <div class="content-fulid text-center">
-                Footer
-            </div>
-            {% block gfooter %}
-            {% endblock gfooter %}
-        </footer>
-    </body>
+            <!--&lt;!&ndash; footer &ndash;&gt;-->
+            <!--<div class="footer">-->
+                <!--<div class="row">-->
+                    <!--<div class="col-sm-9">-->
+                        <!--Footer-->
+                    <!--</div>-->
+                <!--</div>-->
+            <!--{% block footer %}-->
+            <!--{% endblock footer %}-->
+            <!--</div>-->
+        </div>
+    </div>
+</body>
 </html>
 

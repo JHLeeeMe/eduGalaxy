@@ -1,20 +1,12 @@
-<!DOCTYPE html>
-{% extends 'school/base_detail.html' %}
-
-<html>
-    <head>
-        {% block head_title %}
-            <title>user_detail.html</title>
-        {% endblock head_title %}
-    </head>
-    <body>
-        {% block gheader %}
-        {% endblock gheader %}
-
-        {% block gbody %}
-        {% endblock gbody %}
-
-        {% block gfooter %}
-        {% endblock gfooter %}
-    </body>
-</html>
+<h3>리뷰</h3>
+<div class="panel panel-default">
+    {% for user_post in user_posts %}
+    <div class="panel panel-body">
+        <h3>
+            <strong>title : {{ user_post.title }}</strong>
+        </h3>
+        <hr>
+        content : {{ user_post.content }}<br>
+    </div>
+    {% endfor %}
+</div>
