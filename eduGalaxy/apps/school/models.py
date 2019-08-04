@@ -44,13 +44,10 @@ class SchoolInfo(models.Model):
     sch_fax = models.CharField(verbose_name='팩스번호', max_length=20)
     sch_homepage = models.CharField(verbose_name='홈페이지주소', max_length=40)
     sch_gonghak = models.CharField(verbose_name='남녀공학 구분', max_length=10, null=False)
-
-    published_date = models.DateTimeField(blank=True, null=True)
-
+    published_date = models.DateTimeField(default=timezone.now, blank=True, null=True)
 
     def __str__(self):
         return self.sch_name
-
 
     class Meta:
         verbose_name = '학교'
@@ -75,10 +72,10 @@ class SchoolCsvFile(models.Model):
         return self.file_name
 
 
-
 # 학교 관계자 게시판
 class AdminPost(models.Model):
-    logo = models.CharField(verbose_name='학교로고 파일명', max_length=100)
+    logo = models.CharField(verbose_name='학교로고 파일명', max_length=100, null=True)
+
     created_date = models.DateTimeField(verbose_name='생성날짜', default=timezone.now)
     created_ip = models.CharField(verbose_name='게시판 생성 ip', max_length=20)
 
@@ -88,11 +85,15 @@ class AdminPost(models.Model):
     edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
     school_info = models.ForeignKey(SchoolInfo, on_delete=models.CASCADE)
 
+    # def __str__(self):
+    #     return self.school_info.sch_name
+
 
 # 사용자 리뷰
 class UserPost(models.Model):
     title = models.CharField(verbose_name='제목', max_length=20)
     content = models.TextField(verbose_name='내용')
+
     created_date = models.DateTimeField(verbose_name='생성날짜', default=timezone.now)
     created_ip = models.CharField(verbose_name='게시판 생성 ip', max_length=20)
 
@@ -100,6 +101,6 @@ class UserPost(models.Model):
     modified_ip = models.CharField(verbose_name='게시판 수정 ip', max_length=20)
 
     edu_user = models.ForeignKey(EduUser, on_delete=models.CASCADE)
-    adminPost = models.ForeignKey(AdminPost, on_delete=models.CASCADE)
+    admin_post = models.ForeignKey(AdminPost, on_delete=models.CASCADE)
 
 

@@ -1,56 +1,16 @@
-    
-<!DOCTYPE html>
 {% extends 'school/base.html' %}
 
-<html>
-    <head>
-        {% block head_title %}
-            <title>index.html</title>
-	    <style>
-		.jumbotron {
-			background-color: #f4511e; /* Orange */
-			color: #ffffff;
-		}
-	    </style>
-        {% endblock head_title %}
-    </head>
-    <body>
-    {% block gheader %}
-      <nav class="navbar navbar-default navbar-fixed-top">
-        <div class="container">
-          <div class="navbar-header">
-            <a class="navbar-brand" href="#">EduGalaxy</a>
-            <ul class="nav navbar-nav navbar-left">
-              <li><a href="#">학교</a></li>
-            </ul>
-          </div>
-          <div class="collapse navbar-collapse" id="myNavbar">
-            <ul class="nav navbar-nav navbar-right">
-              {% if request.user.is_authenticated %}
-                <li><a href="#">myPage</a></li>
-				<li><a href="{% url 'user:logout' %}">Sign Out</a></li>
-			    {% if not request.user.user_confirm %}
-				  {{ request.user.user_nickname }}님, 가입하신 이메일로 인증메일을 발송 하였습니다.
-			      <a href="{% url 'user:resend' %}">
-				    <div class="form-actions">
-				      <button class="btn btn-primary btn-large" type="submit">재발송</button>
-				    </div>
-				  </a>
-			    {% endif %}
-			  {% else %}
-                <li><a href="{% url 'user:login' %}">Sign In</a></li>
-                <li><a href="{% url 'user:signup' %}">Sign Up</a></li>
-			  {% endif %}
-            </ul>
-          </div>
-        </div>
-      </nav>
-    {% endblock gheader%}
-    {% block gbody %}
-        <a href="{% url 'school:postList' %}">학교</a>
-        <a href="#">학원</a>
-    {% endblock gbody %}
-    {% block gfooter %}
-    {% endblock gfooter %}
-    </body>
-</html>
+{% block head_title %}
+    <title>index.html</title>
+{% endblock head_title %}
+
+{% block gheader %}
+{% endblock gheader%}
+
+{% block gbody %}
+    <a href="{% url 'school:post_list' %}">학교</a>
+    <a href="#">학원</a>
+{% endblock gbody %}
+
+{% block gfooter %}
+{% endblock gfooter %}

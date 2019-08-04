@@ -1,5 +1,6 @@
 from apps.school.models import SchoolCsvFile, SchoolInfo
 from django import forms
+from .models import AdminPost
 
 
 class SaveCSVForm(forms.Form):
@@ -76,3 +77,10 @@ class UploadFileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(UploadFileForm, self).__init__(*args, **kwargs)
         self.fields['file'].required = True
+
+
+# class AdminPostForm(forms.ModelForm):
+#
+#     class Meta:
+#         model = AdminPost
+#         fields = ()

@@ -6,6 +6,7 @@ app_name = 'school'
 
 urlpatterns = [
     path('', school_view.index, name='index'),
-    path('post/', school_view.AdminPostList.as_view(), name='postList')
+    path('post/', school_view.AdminPostList.as_view(), name='post_list'),
+    path('post/<int:pk>/', school_view.post_detail, name='post_detail')
 ]
 
