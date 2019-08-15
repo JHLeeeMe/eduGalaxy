@@ -7,18 +7,17 @@ from apps.user.models import EdUser
 class Info(models.Model):
 
     ooe = models.CharField(verbose_name='시도교육청', max_length=30)
-    lea = models.CharField(verbose_name='지역교육청', max_length=20)
-    location = models.CharField(verbose_name='지역', max_length=20)
+    lea = models.CharField(verbose_name='지역교육청', max_length=20, null=True)
+    location = models.CharField(verbose_name='지역', max_length=20, null=True)
     scode = models.CharField(verbose_name='정보공시 학교코드', max_length=20)
     name = models.CharField(verbose_name='학교명', max_length=20, null=False)
     gcode = models.IntegerField(default=0, verbose_name='학교급코드', null=False)
-
     estab_div = models.CharField(verbose_name='설립구분', max_length=4, null=False)
-    char = models.CharField(verbose_name='학교특성', max_length=15)
+    char = models.CharField(verbose_name='학교특성', max_length=15, null=True)
     has_branches = models.BooleanField(
         verbose_name='분교여부',
         default=False,
-        null=False)
+        null=True)
     estab_type = models.CharField(verbose_name='설립유형', max_length=4, null=False)
     day_n_night = models.CharField(verbose_name='주야구분', max_length=4, null=False)
     anniversary = models.CharField(verbose_name='개교기념일', max_length=8, null=False)
@@ -33,8 +32,8 @@ class Info(models.Model):
     lat = models.FloatField(default=0, verbose_name='위도')
     lng = models.FloatField(default=0, verbose_name='경도')
     tel = models.CharField(verbose_name='전화번호', max_length=20)
-    fax = models.CharField(verbose_name='팩스번호', max_length=20)
-    homepage = models.CharField(verbose_name='홈페이지주소', max_length=40)
+    fax = models.CharField(verbose_name='팩스번호', max_length=20, null=True)
+    homepage = models.CharField(verbose_name='홈페이지주소', max_length=40, null=True)
     gender_div = models.CharField(verbose_name='남녀공학 구분', max_length=10, null=False)
 
     num_student = models.IntegerField(default=0, verbose_name='학생 수')
@@ -52,7 +51,7 @@ class Info(models.Model):
 
 class CsvFile(models.Model):
     file = models.FileField(
-        null=False,
+        null=True,
         verbose_name='파일 경로',
         upload_to="admin/schoolCSV",
     )
@@ -73,25 +72,21 @@ class CsvFile(models.Model):
 # 학교 관계자 게시판
 class Post(models.Model):
     logo = models.CharField(verbose_name='학교로고 파일명', max_length=100, null=True)
-
     created_date = models.DateTimeField(verbose_name='생성날짜', default=timezone.now)
-    created_ip = models.CharField(verbose_name='게시판 생성 ip', max_length=20)
-
     modified_date = models.DateTimeField(verbose_name='수정날짜', blank=True, null=True)
     modified_ip = models.CharField(verbose_name='게시판 수정 ip', max_length=20)
 
     eduser = models.OneToOneField(EdUser, on_delete=models.CASCADE)
-    school_info = models.OneToOneField(Info, on_delete=models.CASCADE)
+    info = models.OneToOneField(Info, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.school_info.name
+        return self.info.name
 
 
 # 사용자 리뷰
 class Review(models.Model):
     title = models.CharField(verbose_name='제목', max_length=20)
     content = models.TextField(verbose_name='내용')
-
     created_date = models.DateTimeField(verbose_name='생성날짜', default=timezone.now)
     created_ip = models.CharField(verbose_name='게시판 생성 ip', max_length=20)
 

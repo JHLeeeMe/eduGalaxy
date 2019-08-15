@@ -30,7 +30,7 @@ function kakaoLogin(){
         success: function(authObj) {
             console.log(JSON.stringify(authObj));
             // 로그인 성공시, API를 호출합니다.
-            Kakao.API.request({
+            Kakao.API.  request({
                 url: '/v1/user/me',
                 success: function(res) {
                     window.userID = res.id;						//유저의 카카오톡 고유 id
