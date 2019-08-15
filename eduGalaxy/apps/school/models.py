@@ -72,9 +72,7 @@ class CsvFile(models.Model):
 # 학교 관계자 게시판
 class Post(models.Model):
     logo = models.CharField(verbose_name='학교로고 파일명', max_length=100, null=True)
-
     created_date = models.DateTimeField(verbose_name='생성날짜', default=timezone.now)
-
     modified_date = models.DateTimeField(verbose_name='수정날짜', blank=True, null=True)
     modified_ip = models.CharField(verbose_name='게시판 수정 ip', max_length=20)
 
