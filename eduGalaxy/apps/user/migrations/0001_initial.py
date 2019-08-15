@@ -104,7 +104,7 @@ class Migration(migrations.Migration):
             name='student',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='user.Student'),
         ),
-        migrations.AddField(
+        migrations.AddField (
             model_name='child',
             name='parent',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='user.Parent'),
