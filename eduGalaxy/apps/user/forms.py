@@ -109,13 +109,20 @@ class ProfileCreationForm(forms.Form):
     # 본인인증 여부는 추후 구현 예정(핸드폰 인증/이메일 인증)
 
     def save(self, commit=True):
-        group = self.cleaned_data.get("")
-        phone = self.cleaned_data.get()
-        receive_email = self.cleaned_data.get()
+        group = self.cleaned_data.get("group")
+        phone = self.cleaned_data.get("phone")
+        receive_email = self.cleaned_data.get("receive_email")
         pk = self.cleaned_data.get("pk")
+        print(type(pk))
+        pk = int(pk)
 
-        profile = group + "| " + phone + "| " + receive_email +
-        temp = Temp.objects.get(pk=pk)
+        if receive_email:
+            profile = group + "| " + phone + "| " + "True"
+        else:
+            profile = group + "| " + phone + "| " + "False"
+
+        temp = Temp.objects.get(id=pk)
+        temp.profile = profile
 
         if commit:
             temp.save()

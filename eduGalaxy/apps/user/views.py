@@ -1,9 +1,8 @@
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views.generic.edit import FormView, View
 from django.views.generic.base import TemplateView
-from django.views.generic.detail import SingleObjectMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model, login
 from django.contrib import messages
@@ -15,6 +14,7 @@ from django.middleware.csrf import _compare_salted_tokens
 
 from .mixins import VerificationEmailMixin
 from apps.user.forms import EdUserCreationForm, ProfileCreationForm
+from apps.user.models import Temp
 
 
 class EdUserCreateView(FormView):
@@ -51,34 +51,36 @@ class ProfileCreateView(FormView):
     success_url = reverse_lazy('user:login')
 
     def get(self, request, *args, **kwargs):
-        form = self.form_class(initial=self.initial)
-        context = {'form': form, 'pk': kwargs['pk']}
+        temp = get_object_or_404(Temp, pk=kwargs['pk'])
+        form = self.form_class(initial=self.initial, instance=temp)
+        context = {'form': form}
+        print(type(kwargs['pk']))
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST)
-        pk = request.POST['pk']
-        print(pk)
         if form.is_valid():
             return self.form_valid(form)
         else:
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        # group = form.cleaned_data['group']
+        group = form.cleaned_data['group']
 
-        # temp = form.save(commit=False)
-        # temp.create_date = timezone.now()
-        # temp.save()
-        # eduser_id = temp.id
-        #
-        # if group == 'parent':
-        #     tmp = 'user:parent'
-        # elif group == 'student':
-        #     tmp = 'user:student'
-        # elif group == 'schoolauth':
-        #     tmp = 'user:'
-        return HttpResponseRedirect(self.get_success_url())
+        temp = form.save(commit=False)
+        temp.create_date = timezone.now()
+        temp.save()
+        pk = temp.id
+
+        # if group == "학부모":
+        #     nexturl = 'user:parent'
+        # elif group == "학생":
+        #     nexturl = 'user:student'
+        # elif group == "학교 관계자":
+        #     nexturl = 'user:schoolauth'
+        # else:
+        #     self.form_invalid(form)
+        return HttpResponseRedirect(self.get_success_url(), kwargs={'pk': pk})
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
