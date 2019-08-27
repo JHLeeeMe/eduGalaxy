@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import ugettext as _
 
-from apps.user.models import EdUser
+from apps.user.models import Temp
 
 
 EMAIL_LIST = (
@@ -15,16 +15,11 @@ EMAIL_LIST = (
     ("direct", "직접 입력")
 )
 
-JOB_LIST = (
+GROUP_LIST = (
     ("select", "선택하세요"),
-    ("초등학생", "초등학생"),
-    ("중학생", "중학생"),
-    ("고등학생", "고등학생"),
-    ("대학생", "대학생"),
-    ("대학원생", "대학원생"),
+    ("학생", "학생"),
     ("학부모", "학부모"),
-    ("학교 관계자", "학교 관게자"),
-    ("기타", "기타")
+    ("학교 관계자", "학교 관게자")
 )
 
 
@@ -66,6 +61,68 @@ class EdUserCreationForm(forms.Form):
 
     nickname = forms.CharField(label='닉네임', widget=forms.TextInput)
 
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError(
+                self.error_messages['password_mismatch'],
+                code='password_mismatch',
+            )
+        return password2
+
+    def save(self, commit=True):
+        password = self.cleaned_data.get("password1")
+        nickname = self.cleaned_data.get("nickname")
+
+        email = self.make_email()
+
+        eduser = email + "| " + password + "| " + nickname
+        temp = Temp(eduser=eduser)
+
+        if commit:
+            temp.save()
+
+        return temp
+
+    def make_email(self):
+        email1 = self.cleaned_data.get("email1")
+        email2 = self.cleaned_data.get("email2")
+        email = email1 + "@" + email2
+
+        return email
+
+
+class ProfileCreationForm(forms.Form):
+    group = forms.CharField(widget=forms.Select(
+            choices=GROUP_LIST,
+            attrs={'id': 'group'}
+        ),
+        label="직업"
+    )
+    phone = forms.CharField(label='핸드폰 번호', widget=forms.TextInput)
+    receive_email = forms.BooleanField(
+        label='이메일 수신 동의',
+        required=False,
+    )
+    # 본인인증 여부는 추후 구현 예정(핸드폰 인증/이메일 인증)
+
+    def save(self, commit=True):
+        group = self.cleaned_data.get("")
+        phone = self.cleaned_data.get()
+        receive_email = self.cleaned_data.get()
+        pk = self.cleaned_data.get("pk")
+
+        profile = group + "| " + phone + "| " + receive_email +
+        temp = Temp.objects.get(pk=pk)
+
+        if commit:
+            temp.save()
+
+        return temp
+
+
     # # 나이 select 위젯 선언
     # age_list = range(0, 101)
     # AGE_CONTROL = []
@@ -95,18 +152,6 @@ class EdUserCreationForm(forms.Form):
     #     label='이메일 수신 동의',
     #     required=False,
     # )
-
-    def clean_password2(self):
-        password1 = self.cleaned_data.get("password1")
-        password2 = self.cleaned_data.get("password2")
-
-        if password1 and password2 and password1 != password2:
-            raise forms.ValidationError(
-                self.error_messages['password_mismatch'],
-                code='password_mismatch',
-            )
-        return password2
-
     # def save(self, commit=True):
     #
     #     email1 = self.cleaned_data.get("user_email1")
