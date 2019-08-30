@@ -1,5 +1,10 @@
+import copy
+
 from django import forms
+from django.forms import BaseForm
+from django.forms.utils import ErrorList
 from django.utils.translation import ugettext as _
+
 
 from apps.user.models import Temp
 
@@ -101,34 +106,23 @@ class ProfileCreationForm(forms.Form):
         ),
         label="직업"
     )
-    phone = forms.CharField(label='핸드폰 번호', widget=forms.TextInput)
+    phone = forms.CharField(label='핸드폰 번호', widget=forms.TextInput, required=False)
     receive_email = forms.BooleanField(
         label='이메일 수신 동의',
         required=False,
     )
     # 본인인증 여부는 추후 구현 예정(핸드폰 인증/이메일 인증)
 
-    def save(self, commit=True):
-        group = self.cleaned_data.get("group")
-        phone = self.cleaned_data.get("phone")
-        receive_email = self.cleaned_data.get("receive_email")
-        pk = self.cleaned_data.get("pk")
-        print(type(pk))
-        pk = int(pk)
+    def profile_data(self):
+        group = self.cleaned_data.get('group')
+        phone = self.cleaned_data.get('phone')
+        receive_email = self.cleaned_data.get('receive_email')
 
         if receive_email:
-            profile = group + "| " + phone + "| " + "True"
+            data = group + "| " + phone + "| " + "True"
         else:
-            profile = group + "| " + phone + "| " + "False"
-
-        temp = Temp.objects.get(id=pk)
-        temp.profile = profile
-
-        if commit:
-            temp.save()
-
-        return temp
-
+            data = group + "| " + phone + "| " + "False"
+        return data
 
     # # 나이 select 위젯 선언
     # age_list = range(0, 101)

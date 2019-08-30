@@ -1,6 +1,6 @@
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.edit import FormView, View
 from django.views.generic.base import TemplateView
 from django.contrib.auth.tokens import default_token_generator
@@ -50,28 +50,34 @@ class ProfileCreateView(FormView):
     template_name = 'user/create_profile.html'
     success_url = reverse_lazy('user:login')
 
+    def get_object(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(Temp, id=pk)
+
     def get(self, request, *args, **kwargs):
-        temp = get_object_or_404(Temp, pk=kwargs['pk'])
-        form = self.form_class(initial=self.initial, instance=temp)
-        context = {'form': form}
-        print(type(kwargs['pk']))
-        return render(request, self.template_name, context)
+        return render(self.request, self.template_name, self.get_context_data())
 
     def post(self, request, *args, **kwargs):
-        form = self.form_class(request.POST)
+        form = self.get_form()
         if form.is_valid():
             return self.form_valid(form)
         else:
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        group = form.cleaned_data['group']
+        temp = self.get_object()
+        if 'next' in self.request.POST:
+            data = form.profile_data()
+            group = self.request.POST['group']
+            pk = temp.id
 
-        temp = form.save(commit=False)
-        temp.create_date = timezone.now()
-        temp.save()
-        pk = temp.id
-
+            temp.profile = data
+            temp.create_date = timezone.now()
+            temp.save()
+            return HttpResponseRedirect(self.get_success_url())
+        elif 'cancel' in self.request.POST:
+            temp.delete()
+            return redirect('school:index')
         # if group == "학부모":
         #     nexturl = 'user:parent'
         # elif group == "학생":
@@ -80,7 +86,8 @@ class ProfileCreateView(FormView):
         #     nexturl = 'user:schoolauth'
         # else:
         #     self.form_invalid(form)
-        return HttpResponseRedirect(self.get_success_url(), kwargs={'pk': pk})
+
+        # reverse_lazy(nexturl, kwargs={'pk': pk})
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
