@@ -1,24 +1,25 @@
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.edit import FormView, View
 from django.views.generic.base import TemplateView
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model, login
 from django.contrib import messages
+from django.utils import timezone
 
 # social auth
 from .oauth.providers.naver import NaverLoginMixin
 from django.middleware.csrf import _compare_salted_tokens
 
 from .mixins import VerificationEmailMixin
-from apps.user.forms import EdUserCreationForm
+from apps.user.forms import EdUserCreationForm, ProfileCreationForm
+from apps.user.models import Temp
 
 
-class EdUserCreateView(FormView, VerificationEmailMixin):
+class EdUserCreateView(FormView):
     form_class = EdUserCreationForm
     template_name = 'user/create_user.html'
-    success_url = reverse_lazy('user:login')
 
     def get(self, request, *args, **kwargs):
         form = self.form_class(initial=self.initial)
@@ -34,25 +35,62 @@ class EdUserCreateView(FormView, VerificationEmailMixin):
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        email = self.make_email(form)
-        password1 = form.cleaned_data["password1"]
-        nickname = form.cleaned_data["nickname"]
-
-        eduser = [email, password1, nickname]
-        context = {'eduser': eduser}
-        print(eduser[0])
-        # return render(self.request, self.get_success_url(), context)
-        return HttpResponseRedirect(self.get_success_url())
+        temp = form.save(commit=False)
+        temp.create_date = timezone.now()
+        temp.save()
+        eduser_id = temp.id
+        return HttpResponseRedirect(reverse_lazy('user:profile', kwargs={'pk': eduser_id}))
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
 
-    def make_email(self, form):
-        email1 = form.cleaned_data["email1"]
-        email2 = form.cleaned_data["email2"]
-        email = email1 + "@" + email2
 
-        return email
+class ProfileCreateView(FormView):
+    form_class = ProfileCreationForm
+    template_name = 'user/create_profile.html'
+    success_url = reverse_lazy('user:login')
+
+    def get_object(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(Temp, id=pk)
+
+    def get(self, request, *args, **kwargs):
+        return render(self.request, self.template_name, self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        temp = self.get_object()
+        if 'next' in self.request.POST:
+            data = form.profile_data()
+            group = self.request.POST['group']
+            pk = temp.id
+
+            temp.profile = data
+            temp.create_date = timezone.now()
+            temp.save()
+            return HttpResponseRedirect(self.get_success_url())
+        elif 'cancel' in self.request.POST:
+            temp.delete()
+            return redirect('school:index')
+        # if group == "학부모":
+        #     nexturl = 'user:parent'
+        # elif group == "학생":
+        #     nexturl = 'user:student'
+        # elif group == "학교 관계자":
+        #     nexturl = 'user:schoolauth'
+        # else:
+        #     self.form_invalid(form)
+
+        # reverse_lazy(nexturl, kwargs={'pk': pk})
+
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class EduUserVerificationView(TemplateView):
