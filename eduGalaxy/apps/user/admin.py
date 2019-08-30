@@ -5,7 +5,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
 from apps.user.models import EdUser, Profile, SchoolAuth, Student
-from apps.user.models import Parent, Child, Log
+from apps.user.models import Parent, Child, Log, Temp
 
 
 class EdUserCreationForm(forms.ModelForm):
@@ -201,6 +201,12 @@ class LogAdmin(admin.ModelAdmin):
     get_login_date.short_description = '마지막 로그인 날짜'
 
 
+class TempAdmin(admin.ModelAdmin):
+    list_display = ('id', 'eduser', 'profile', 'create_date', 'student', 'schoolauth', 'parent', 'child')
+    list_display_links = ('id',)
+    list_per_page = 15
+
+
 admin.site.register(EdUser, EdUserAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(SchoolAuth, SchoolAuthAdmin)
@@ -208,6 +214,7 @@ admin.site.register(Student, StudentAdmin)
 admin.site.register(Parent, ParentAdmin)
 admin.site.register(Child, ChildAdmin)
 admin.site.register(Log, LogAdmin)
+admin.site.register(Temp, TempAdmin)
 admin.site.unregister(Group)
 
 
