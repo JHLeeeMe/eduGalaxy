@@ -2,7 +2,7 @@ from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.edit import FormView, View
-from django.views.generic.base import TemplateView
+from django.views.generic.base import TemplateView, RedirectView
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model, login
 from django.contrib import messages
@@ -13,7 +13,7 @@ from .oauth.providers.naver import NaverLoginMixin
 from django.middleware.csrf import _compare_salted_tokens
 
 from .mixins import VerificationEmailMixin
-from apps.user.forms import EdUserCreationForm, ProfileCreationForm
+from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm
 from apps.user.models import Temp
 
 
@@ -48,14 +48,13 @@ class EdUserCreateView(FormView):
 class ProfileCreateView(FormView):
     form_class = ProfileCreationForm
     template_name = 'user/create_profile.html'
-    success_url = reverse_lazy('user:login')
 
     def get_object(self):
         pk = self.kwargs['pk']
         return get_object_or_404(Temp, id=pk)
 
     def get(self, request, *args, **kwargs):
-        return render(self.request, self.template_name, self.get_context_data())
+        return render(self.request, self.template_name, self.get_context_data(**kwargs))
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
@@ -71,26 +70,59 @@ class ProfileCreateView(FormView):
             group = self.request.POST['group']
             pk = temp.id
 
+            if group == "학생":
+                nexturl = 'user:student'
+            # elif group == "학교 관계자":
+            #     nexturl = 'user:schoolauth'
+            else:
+                return render(self.request, self.template_name, {
+                    'error_message' : "직업을 선택해주세요",
+                })
             temp.profile = data
             temp.create_date = timezone.now()
             temp.save()
-            return HttpResponseRedirect(self.get_success_url())
-        elif 'cancel' in self.request.POST:
-            temp.delete()
-            return redirect('school:index')
-        # if group == "학부모":
-        #     nexturl = 'user:parent'
-        # elif group == "학생":
-        #     nexturl = 'user:student'
-        # elif group == "학교 관계자":
-        #     nexturl = 'user:schoolauth'
-        # else:
-        #     self.form_invalid(form)
 
-        # reverse_lazy(nexturl, kwargs={'pk': pk})
+            return HttpResponseRedirect(reverse_lazy(nexturl, kwargs={'pk': pk}))
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
+
+
+class CreateStudentView(FormView):
+    form_class = StudentCreationForm
+    template_name = "user/create_student.html"
+    success_url = reverse_lazy('user:login')
+
+    def get_object(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(Temp, id=pk)
+
+    def get(self, request, *args, **kwargs):
+        return render(self.request, self.template_name, self.get_context_data(**kwargs))
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class TempDeleteView(RedirectView):
+    def get_object(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(Temp, id=pk)
+
+    def get(self, request, *args, **kwargs):
+        temp = self.get_object()
+        temp.delete()
+        return redirect('school:index')
 
 
 class EduUserVerificationView(TemplateView):
