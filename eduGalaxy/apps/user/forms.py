@@ -1,8 +1,6 @@
 import copy
 
 from django import forms
-from django.forms import BaseForm
-from django.forms.utils import ErrorList
 from django.utils.translation import ugettext as _
 
 
@@ -124,21 +122,42 @@ class ProfileCreationForm(forms.Form):
             data = group + "| " + phone + "| " + "False"
         return data
 
-    # # 나이 select 위젯 선언
-    # age_list = range(0, 101)
-    # AGE_CONTROL = []
-    # for age in age_list:
-    #     if age == 0:
-    #         AGE_CONTROL.append([age, " "])
-    #     else:
-    #         AGE_CONTROL.append([age, str(age)])
-    #
-    # user_age = forms.CharField(widget=forms.Select(
-    #         choices=tuple(AGE_CONTROL),
-    #         attrs={'name': 'age'},
-    #     ),
-    #     label='나이'
-    # )
+
+class StudentCreationForm(forms.Form):
+    school = forms.CharField(label='다니는 학교', widget=forms.TextInput)
+
+    grade_list = range(0, 7)
+    GRADE = []
+    for grade in grade_list:
+        if grade == 0:
+            GRADE.append([grade, " "])
+        else:
+            GRADE.append([grade, str(grade)])
+
+    grade = forms.CharField(widget=forms.Select(
+        choices=tuple(GRADE),
+        attrs={'name': 'grade'},
+    ),
+        label='학년'
+    )
+
+    # 나이 select 위젯 선언
+    age_list = range(0, 101)
+    AGE_CONTROL = []
+    for age in age_list:
+        if age == 0:
+            AGE_CONTROL.append([age, " "])
+        else:
+            AGE_CONTROL.append([age, str(age)])
+
+    age = forms.CharField(widget=forms.Select(
+            choices=tuple(AGE_CONTROL),
+            attrs={'name': 'age'},
+        ),
+        label='나이'
+    )
+    address1 = forms.CharField(label='주소', widget=forms.TextInput)
+    address2 = forms.CharField(label='상세 주소', widget=forms.TextInput)
     #
     # user_job = forms.CharField(widget=forms.Select(
     #         choices=JOB_LIST,
