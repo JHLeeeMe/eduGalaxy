@@ -3,8 +3,7 @@ import copy
 from django import forms
 from django.utils.translation import ugettext as _
 
-
-from apps.user.models import Temp
+from apps.user.models import Temp, SchoolAuth
 
 
 EMAIL_LIST = (
@@ -22,7 +21,7 @@ GROUP_LIST = (
     ("select", "선택하세요"),
     ("학생", "학생"),
     ("학부모", "학부모"),
-    ("학교 관계자", "학교 관게자")
+    ("학교 관계자", "학교 관계자")
 )
 
 
@@ -158,7 +157,25 @@ class StudentCreationForm(forms.Form):
     )
     address1 = forms.CharField(label='주소', widget=forms.TextInput)
     address2 = forms.CharField(label='상세 주소', widget=forms.TextInput)
-    #
+
+
+class SchoolAuthCreationForm(forms.ModelForm):
+    class Meta:
+        model = SchoolAuth
+        fields = ('school', 'auth_doc', 'tel')
+
+    def __init__(self, *args, **kwargs):
+        super(SchoolAuthCreationForm, self).__init__(*args, **kwargs)
+        self.fields['auth_doc'].required = False
+
+    def school_auth_data(self):
+        school = self.cleaned_data.get('school')
+        tel = self.cleaned_data.get('tel')
+        auth_doc = self.cleaned_data.get('auth_doc')
+
+        data = [school, tel, auth_doc]
+        return data
+
     # user_job = forms.CharField(widget=forms.Select(
     #         choices=JOB_LIST,
     #         attrs={'id': 'job'}
