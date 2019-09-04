@@ -16,9 +16,9 @@ function Change_Email(){
     }
 
     // 값과 활성화 여부 컨트롤
-    form.user_email2.value = sel;
-    form.user_email2.disabled = dis;
-    form.user_email2.readonly = readonly;
+    form.email2.value = sel;
+    form.email2.disabled = dis;
+    form.email2.readonly = readonly;
 }
 
 // document.getElementById(아이디) : 해당 아이디의 요소를 선택함.

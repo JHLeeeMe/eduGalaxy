@@ -1,7 +1,9 @@
+import copy
+
 from django import forms
 from django.utils.translation import ugettext as _
 
-from .models import EduUser
+from apps.user.models import Temp, SchoolAuth
 
 
 EMAIL_LIST = (
@@ -15,21 +17,16 @@ EMAIL_LIST = (
     ("direct", "직접 입력")
 )
 
-JOB_LIST = (
+GROUP_LIST = (
     ("select", "선택하세요"),
-    ("초등학생", "초등학생"),
-    ("중학생", "중학생"),
-    ("고등학생", "고등학생"),
-    ("대학생", "대학생"),
-    ("대학원생", "대학원생"),
+    ("학생", "학생"),
     ("학부모", "학부모"),
-    ("학교 관계자", "학교 관게자"),
-    ("기타", "기타")
+    ("학교 관계자", "학교 관계자")
 )
 
 
-class EduUserCreationForm(forms.Form):
-    user_email1 = forms.CharField(widget=forms.TextInput(
+class EdUserCreationForm(forms.Form):
+    email1 = forms.CharField(widget=forms.TextInput(
             attrs={
                 'autofocus': 'autofocus',
                 'required': 'required'}
@@ -37,7 +34,7 @@ class EduUserCreationForm(forms.Form):
         label='이메일'
     )
 
-    user_email2 = forms.CharField(widget=forms.TextInput(
+    email2 = forms.CharField(widget=forms.TextInput(
             attrs={
                 'id': 'user_email2',
                 'disabled': 'disabled'}
@@ -64,37 +61,7 @@ class EduUserCreationForm(forms.Form):
         widget=forms.PasswordInput,
     )
 
-    user_nickname = forms.CharField(label='닉네임', widget=forms.TextInput)
-
-    # 나이 select 위젯 선언
-    age_list = range(0, 101)
-    AGE_CONTROL = []
-    for age in age_list:
-        if age == 0:
-            AGE_CONTROL.append([age, " "])
-        else:
-            AGE_CONTROL.append([age, str(age)])
-
-    user_age = forms.CharField(widget=forms.Select(
-            choices=tuple(AGE_CONTROL),
-            attrs={'name': 'age'},
-        ),
-        label='나이'
-    )
-
-    user_job = forms.CharField(widget=forms.Select(
-            choices=JOB_LIST,
-            attrs={'id': 'job'}
-        ),
-        label="직업"
-    )
-
-    user_phone = forms.CharField(label='핸드폰 번호',)
-    # checkbox 구현 필요
-    user_receive_email = forms.BooleanField(
-        label='이메일 수신 동의',
-        required=False,
-    )
+    nickname = forms.CharField(label='닉네임', widget=forms.TextInput)
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
@@ -108,32 +75,147 @@ class EduUserCreationForm(forms.Form):
         return password2
 
     def save(self, commit=True):
-
-        email1 = self.cleaned_data.get("user_email1")
-        email2 = self.cleaned_data.get("user_email2")
-
         password = self.cleaned_data.get("password1")
-        nickname = self.cleaned_data.get("user_nickname")
+        nickname = self.cleaned_data.get("nickname")
 
-        str_age = self.cleaned_data.get("user_age")
-        job = self.cleaned_data.get("user_job")
-        phone = self.cleaned_data.get("user_phone")
-        receive_email = self.cleaned_data.get("user_receive_email")
+        email = self.make_email()
 
-        email = email1 + "@" + email2
-        age = int(str_age)
-
-        user = EduUser(
-            user_email=email,
-            password=password,
-            user_nickname=nickname,
-            user_age=age,
-            user_job=job,
-            user_phone=phone,
-            user_receive_email=receive_email)
+        eduser = email + "| " + password + "| " + nickname
+        temp = Temp(eduser=eduser)
 
         if commit:
-            user.save()
+            temp.save()
 
-        return user
+        return temp
 
+    def make_email(self):
+        email1 = self.cleaned_data.get("email1")
+        email2 = self.cleaned_data.get("email2")
+        email = email1 + "@" + email2
+
+        return email
+
+
+class ProfileCreationForm(forms.Form):
+    group = forms.CharField(widget=forms.Select(
+            choices=GROUP_LIST,
+            attrs={'id': 'group'}
+        ),
+        label="직업"
+    )
+    phone = forms.CharField(label='핸드폰 번호', widget=forms.TextInput, required=False)
+    receive_email = forms.BooleanField(
+        label='이메일 수신 동의',
+        required=False,
+    )
+    # 본인인증 여부는 추후 구현 예정(핸드폰 인증/이메일 인증)
+
+    def profile_data(self):
+        group = self.cleaned_data.get('group')
+        phone = self.cleaned_data.get('phone')
+        receive_email = self.cleaned_data.get('receive_email')
+
+        if receive_email:
+            data = group + "| " + phone + "| " + "True"
+        else:
+            data = group + "| " + phone + "| " + "False"
+        return data
+
+
+class StudentCreationForm(forms.Form):
+    school = forms.CharField(label='다니는 학교', widget=forms.TextInput)
+
+    grade_list = range(0, 7)
+    GRADE = []
+    for grade in grade_list:
+        if grade == 0:
+            GRADE.append([grade, " "])
+        else:
+            GRADE.append([grade, str(grade)])
+
+    grade = forms.CharField(widget=forms.Select(
+        choices=tuple(GRADE),
+        attrs={'name': 'grade'},
+    ),
+        label='학년'
+    )
+
+    # 나이 select 위젯 선언
+    age_list = range(0, 101)
+    AGE_CONTROL = []
+    for age in age_list:
+        if age == 0:
+            AGE_CONTROL.append([age, " "])
+        else:
+            AGE_CONTROL.append([age, str(age)])
+
+    age = forms.CharField(widget=forms.Select(
+            choices=tuple(AGE_CONTROL),
+            attrs={'name': 'age'},
+        ),
+        label='나이'
+    )
+    address1 = forms.CharField(label='주소', widget=forms.TextInput)
+    address2 = forms.CharField(label='상세 주소', widget=forms.TextInput)
+
+
+class SchoolAuthCreationForm(forms.ModelForm):
+    class Meta:
+        model = SchoolAuth
+        fields = ('school', 'auth_doc', 'tel')
+
+    def __init__(self, *args, **kwargs):
+        super(SchoolAuthCreationForm, self).__init__(*args, **kwargs)
+        self.fields['auth_doc'].required = False
+
+    def school_auth_data(self):
+        school = self.cleaned_data.get('school')
+        tel = self.cleaned_data.get('tel')
+        auth_doc = self.cleaned_data.get('auth_doc')
+
+        data = [school, tel, auth_doc]
+        return data
+
+    # user_job = forms.CharField(widget=forms.Select(
+    #         choices=JOB_LIST,
+    #         attrs={'id': 'job'}
+    #     ),
+    #     label="직업"
+    # )
+    #
+    # user_phone = forms.CharField(label='핸드폰 번호',)
+    # # checkbox 구현 필요
+    # user_receive_email = forms.BooleanField(
+    #     label='이메일 수신 동의',
+    #     required=False,
+    # )
+    # def save(self, commit=True):
+    #
+    #     email1 = self.cleaned_data.get("user_email1")
+    #     email2 = self.cleaned_data.get("user_email2")
+    #
+    #     password = self.cleaned_data.get("password1")
+    #     nickname = self.cleaned_data.get("user_nickname")
+    #
+    #     str_age = self.cleaned_data.get("user_age")
+    #     job = self.cleaned_data.get("user_job")
+    #     phone = self.cleaned_data.get("user_phone")
+    #     receive_email = self.cleaned_data.get("user_receive_email")
+    #
+    #     email = email1 + "@" + email2
+    #     age = int(str_age)
+    #
+    #     user = EduUser(
+    #         user_email=email,
+    #         password=password,
+    #         user_nickname=nickname,
+    #         user_age=age,
+    #         user_job=job,
+    #         user_phone=phone,
+    #         user_receive_email=receive_email)
+    #
+    #     if commit:
+    #         user.save()
+    #
+    #     return user
+    #
