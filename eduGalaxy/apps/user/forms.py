@@ -158,47 +158,22 @@ class StudentCreationForm(forms.Form):
     )
     address1 = forms.CharField(label='주소', widget=forms.TextInput)
     address2 = forms.CharField(label='상세 주소', widget=forms.TextInput)
-    #
-    # user_job = forms.CharField(widget=forms.Select(
-    #         choices=JOB_LIST,
-    #         attrs={'id': 'job'}
-    #     ),
-    #     label="직업"
-    # )
-    #
-    # user_phone = forms.CharField(label='핸드폰 번호',)
-    # # checkbox 구현 필요
-    # user_receive_email = forms.BooleanField(
-    #     label='이메일 수신 동의',
-    #     required=False,
-    # )
-    # def save(self, commit=True):
-    #
-    #     email1 = self.cleaned_data.get("user_email1")
-    #     email2 = self.cleaned_data.get("user_email2")
-    #
-    #     password = self.cleaned_data.get("password1")
-    #     nickname = self.cleaned_data.get("user_nickname")
-    #
-    #     str_age = self.cleaned_data.get("user_age")
-    #     job = self.cleaned_data.get("user_job")
-    #     phone = self.cleaned_data.get("user_phone")
-    #     receive_email = self.cleaned_data.get("user_receive_email")
-    #
-    #     email = email1 + "@" + email2
-    #     age = int(str_age)
-    #
-    #     user = EduUser(
-    #         user_email=email,
-    #         password=password,
-    #         user_nickname=nickname,
-    #         user_age=age,
-    #         user_job=job,
-    #         user_phone=phone,
-    #         user_receive_email=receive_email)
-    #
-    #     if commit:
-    #         user.save()
-    #
-    #     return user
-    #
+
+    # 학력 추가 필요
+
+    def student_data(self):
+        school = self.cleaned_data.get('school')
+        grade = self.cleaned_data.get('grade')
+        age = self.cleaned_data.get('age')
+        address1 = self.cleaned_data.get('address1')
+        address2 = self.cleaned_data.get('address2')
+
+        front = school + "| " + str(grade) + "| " + str(age)
+        back = address1 + "| " + address2
+
+        data = {
+            'front': front,
+            'back': back
+        }
+
+        return data
