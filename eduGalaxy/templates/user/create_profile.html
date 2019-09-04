@@ -35,7 +35,9 @@
                 </table>
                     <div class="form-actions">
                         <button class="btn btn-primary" name="next" type="submit">다음</button>
-                        <a href="{% url 'user:temp_delete' pk=pk %}"><button type='button' class="btn btn-danger" name="cancel" >취소</button></a>
+                        <a href="{% url 'user:temp_delete' pk=pk %}">
+                            <button type='button' class="btn btn-danger" name="cancel" >취소</button>
+                        </a>
                     </div>
 
                 </form>
@@ -45,17 +47,3 @@
 </body>
 </html>
 
-<!--<tr>-->
-            <!--<td><h5>성별:</h5></td>-->
-            <!--<td><label><input type="radio" name="user_gender" value="M" checked='checked'>남</label></td>-->
-            <!--<td><label><input type="radio" name="user_gender" value="F">여</label></td>-->
-        <!--</tr>-->
-        <!--&lt;!&ndash;-->
-            <!--주소 부분 보류-->
-            <!--<tr>&ndash;&gt;-->
-            <!--&lt;!&ndash;<td>{{ form.province_select.label_tag }}</td>&ndash;&gt;-->
-            <!--&lt;!&ndash;<td>{{ form.province_select }}</td>&ndash;&gt;-->
-            <!--&lt;!&ndash;<td>{{ form.city_select }}</td>&ndash;&gt;-->
-            <!--&lt;!&ndash;<td>{{ form.dong_select }}</td>&ndash;&gt;-->
-        <!--&lt;!&ndash;</tr>&ndash;&gt;-->
-    <!--</table>-->
