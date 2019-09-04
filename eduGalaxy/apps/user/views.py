@@ -13,7 +13,7 @@ from .oauth.providers.naver import NaverLoginMixin
 from django.middleware.csrf import _compare_salted_tokens
 
 from .mixins import VerificationEmailMixin
-from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm
+from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm
 from apps.user.models import Temp
 
 
@@ -72,11 +72,11 @@ class ProfileCreateView(FormView):
 
             if group == "학생":
                 nexturl = 'user:student'
-            # elif group == "학교 관계자":
-            #     nexturl = 'user:schoolauth'
+            elif group == "학교 관계자":
+                nexturl = 'user:school_auth'
             else:
                 return render(self.request, self.template_name, {
-                    'error_message' : "직업을 선택해주세요",
+                    'error_message': "직업을 선택해주세요",
                 })
             temp.profile = data
             temp.create_date = timezone.now()
@@ -121,6 +121,57 @@ class StudentCreateView(FormView):
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
+
+
+class SchoolAuthCreateView(FormView):
+    form_class = SchoolAuthCreationForm
+    template_name = "user/create_school_auth.html"
+    success_url = reverse_lazy('user:login')
+
+    def get_object(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(Temp, id=pk)
+
+    def get(self, request, *args, **kwargs):
+        return render(self.request, self.template_name, self.get_context_data(**kwargs))
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        temp = self.get_object()
+        data = form.school_auth_data()
+
+        temp.schoolauth = data
+        temp.create_date = timezone.now()
+        temp.save()
+
+        print(type(temp.schoolauth[2]))
+
+        return HttpResponseRedirect(self.get_success_url())
+
+
+#class ResultCreateView(FormView):
+#    form_class = ResultCreationForm
+#    template_name = 'user/create_result.html'
+
+#    def get_object(self):
+#        pk = self.kwargs['pk']
+#        return get_object_or_404(Temp, id=pk)
+
+#    def post(self, request, *args, **kwargs):
+#        form = self.get_form()
+#        if form.is_valid():
+#            return self.form_valid(form)
+#        else:
+#            return self.form_invalid(form)
+
+#    def form_valid(self, form):
+#        return HttpResponseRedirect(self.get_success_url())
 
 
 class TempDeleteView(RedirectView):
