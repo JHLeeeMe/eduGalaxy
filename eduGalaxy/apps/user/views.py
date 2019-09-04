@@ -88,7 +88,7 @@ class ProfileCreateView(FormView):
         return self.render_to_response(self.get_context_data(form=form))
 
 
-class CreateStudentView(FormView):
+class StudentCreateView(FormView):
     form_class = StudentCreationForm
     template_name = "user/create_student.html"
     success_url = reverse_lazy('user:login')
@@ -108,6 +108,15 @@ class CreateStudentView(FormView):
             return self.form_invalid(form)
 
     def form_valid(self, form):
+        gender = self.request.POST['gender']
+        data = form.student_data()
+        temp = self.get_object()
+        student = data['front'] + "| " + gender + "| " + data['back']
+
+        temp.student = student
+        temp.create_date = timezone.now()
+        temp.save()
+
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
