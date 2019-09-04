@@ -108,6 +108,15 @@ class StudentCreateView(FormView):
             return self.form_invalid(form)
 
     def form_valid(self, form):
+        gender = self.request.POST['gender']
+        data = form.student_data()
+        temp = self.get_object()
+        student = data['front'] + "| " + gender + "| " + data['back']
+
+        temp.student = student
+        temp.create_date = timezone.now()
+        temp.save()
+
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
