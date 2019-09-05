@@ -3,6 +3,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.edit import FormView, View
 from django.views.generic.base import TemplateView, RedirectView
+
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model, login
 from django.contrib import messages
@@ -17,6 +19,7 @@ from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCrea
 from apps.user.models import Temp
 
 
+# 회원가입
 class EdUserCreateView(FormView):
     form_class = EdUserCreationForm
     template_name = 'user/create_user.html'
@@ -185,6 +188,16 @@ class TempDeleteView(RedirectView):
         return redirect('school:index')
 
 
+# 여기서부터 마이페이지
+class EdUserMypageView(TemplateView, LoginRequiredMixin):
+    template_name = "user/mypage/index.html"
+
+
+# class PasswordChangeView(FormView, LoginRequiredMixin):
+#
+
+
+# 여기서부터 소셜 로그인
 class EduUserVerificationView(TemplateView):
     model = get_user_model()
     token_generator = default_token_generator

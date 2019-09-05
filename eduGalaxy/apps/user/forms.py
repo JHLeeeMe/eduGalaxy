@@ -157,8 +157,8 @@ class StudentCreationForm(forms.Form):
     )
     address1 = forms.CharField(label='주소', widget=forms.TextInput)
     address2 = forms.CharField(label='상세 주소', widget=forms.TextInput)
-    
-     # 학력 추가 필요
+
+    # 학력 추가 필요
     def student_data(self):
         school = self.cleaned_data.get('school')
         grade = self.cleaned_data.get('grade')
@@ -176,6 +176,7 @@ class StudentCreationForm(forms.Form):
 
         return data
 
+
 class SchoolAuthCreationForm(forms.ModelForm):
     class Meta:
         model = SchoolAuth
@@ -192,3 +193,8 @@ class SchoolAuthCreationForm(forms.ModelForm):
 
         data = [school, tel, auth_doc]
         return data
+
+
+# class PasswordChangeForm(forms.ModelForm):
+#     class Meta:
+#         mode
