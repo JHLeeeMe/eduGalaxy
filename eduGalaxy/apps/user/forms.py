@@ -1,9 +1,7 @@
-import copy
-
 from django import forms
 from django.utils.translation import ugettext as _
-
-from apps.user.models import Temp, SchoolAuth
+from django.contrib.auth.hashers import check_password
+from apps.user.models import EdUser, Temp, SchoolAuth, Log, Profile
 
 
 EMAIL_LIST = (
@@ -195,6 +193,52 @@ class SchoolAuthCreationForm(forms.ModelForm):
         return data
 
 
-# class PasswordChangeForm(forms.ModelForm):
-#     class Meta:
-#         mode
+class PasswordChangeForm(forms.Form):
+    old_pwd = forms.CharField(
+        label=_("기존 비밀번호"),
+        strip=False,
+        widget=forms.PasswordInput,
+    )
+    new_pwd1 = forms.CharField(
+        label=_("새로운 비밀번호"),
+        strip=False,
+        widget=forms.PasswordInput,
+    )
+    new_pwd2 = forms.CharField(
+        label=_("비밀번호 확인"),
+        strip=False,
+        widget=forms.PasswordInput,
+    )
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("new_pwd1")
+        password2 = self.cleaned_data.get("new_pwd2")
+
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError("비밀번호가 서로 다릅니다!")
+        return password2
+
+    def compare_password(self, user):
+        old_password = self.cleaned_data.get("old_pwd")
+        new_password = self.cleaned_data.get("new_pwd2")
+
+        if not check_password(old_password, user.password):
+            raise forms.ValidationError("기존 비밀번호가 아닙니다.")
+        if new_password == old_password:
+            raise forms.ValidationError("기존 비밀번호와 새로운 비밀번호랑 달라야합니다.")
+        return True
+
+    def user_update(self, user):
+        if self.compare_password(user):
+            password = self.clean_password2()
+            user.password = password
+
+            user.set_password(password)
+            user.save()
+
+
+class ProfileUpdateForm(forms.ModelForm):
+
+    class Meta:
+        model = Profile
+        fields = ('phone', 'receive_email')

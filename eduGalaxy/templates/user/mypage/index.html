@@ -7,11 +7,13 @@
 {% block gbody %}
     <table border="4" align="center">
         <tr bgcolor="black" align="center">
-            <p>
-                <td style="color:white"> <h1>프로필변경</h1> </td>
-                <td style="color:white"> <h1>비밀번호변경 </h1></td>
+            <td style="color:white">
+                <h1>프로필변경</h1>
+            </td>
+                <td style="color:white">
+                    <a href="{% url 'user:change_password'%}"><h1>비밀번호변경 </h1></a>
+                </td>
                 <td style="color:white"> <h1>회원탈퇴</h1> </td>
-            </p>
         </tr>
     </table>
 {% endblock gbody %}

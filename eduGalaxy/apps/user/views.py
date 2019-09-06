@@ -1,7 +1,7 @@
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic.edit import FormView, View
+from django.views.generic.edit import FormView, View, UpdateView
 from django.views.generic.base import TemplateView, RedirectView
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -15,8 +15,9 @@ from .oauth.providers.naver import NaverLoginMixin
 from django.middleware.csrf import _compare_salted_tokens
 
 from .mixins import VerificationEmailMixin
-from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm
-from apps.user.models import Temp
+from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm, PasswordChangeForm
+from apps.user.forms import ProfileUpdateForm
+from apps.user.models import EdUser, Temp, Profile
 
 
 # 회원가입
@@ -192,9 +193,52 @@ class TempDeleteView(RedirectView):
 class EdUserMypageView(TemplateView, LoginRequiredMixin):
     template_name = "user/mypage/index.html"
 
+    def get(self, request, *args, **kwargs):
+        email = self.request.user.get_username()
+        eduser = EdUser.objects.get(email=email)
+        pk = eduser.id
+        kwargs.update({'pk': pk})
+        return super().get(request, *args, **kwargs)
 
-# class PasswordChangeView(FormView, LoginRequiredMixin):
-#
+
+class PasswordChangeView(FormView, LoginRequiredMixin):
+    form_class = PasswordChangeForm
+    template_name = "user/mypage/change_password.html"
+    success_url = reverse_lazy('user:login')
+
+    def get_object(self):
+        email = self.request.user.get_username()
+        return get_object_or_404(EdUser, email=email)
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(initial=self.initial)
+        context = {'form': form}
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        eduser = self.get_object()
+        form.user_update(eduser)
+        return HttpResponseRedirect(self.get_success_url())
+
+
+class ProfileUpdateView(UpdateView, LoginRequiredMixin):
+    model = Profile
+    context_object_name = 'profile'
+    form_class = ProfileUpdateForm
+    template_name = "user/mypage/update_profile.html"
+    success_url = reverse_lazy('user:mypage')
+
+    def get_id(self):
+        email = self.request.user.get_username
+        user = EdUser.objects.get(email=email)
+        return user.id
 
 
 # 여기서부터 소셜 로그인
