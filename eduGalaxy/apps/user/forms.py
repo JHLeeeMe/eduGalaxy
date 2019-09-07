@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import ugettext as _
 from django.contrib.auth.hashers import check_password
-from apps.user.models import EdUser, Temp, SchoolAuth, Log, Profile
+from apps.user.models import EdUser, Temp, SchoolAuth, Log, Profile, Student
 
 
 EMAIL_LIST = (
@@ -238,7 +238,58 @@ class PasswordChangeForm(forms.Form):
 
 
 class ProfileUpdateForm(forms.ModelForm):
+    school = forms.CharField(label='다니는 학교', widget=forms.TextInput)
+
+    grade_list = range(0, 7)
+    GRADE = []
+    for grade in grade_list:
+        if grade == 0:
+            GRADE.append([grade, " "])
+        else:
+            GRADE.append([grade, str(grade)])
+
+    grade = forms.CharField(widget=forms.Select(
+        choices=tuple(GRADE),
+        attrs={'name': 'grade'},
+    ),
+        label='학년'
+    )
+
+    # 나이 select 위젯 선언
+    age_list = range(0, 101)
+    AGE_CONTROL = []
+    for age in age_list:
+        if age == 0:
+            AGE_CONTROL.append([age, " "])
+        else:
+            AGE_CONTROL.append([age, str(age)])
+
+    age = forms.CharField(widget=forms.Select(
+        choices=tuple(AGE_CONTROL),
+        attrs={'name': 'age'},
+    ),
+        label='나이'
+    )
+    address1 = forms.CharField(label='주소', widget=forms.TextInput)
+    address2 = forms.CharField(label='상세 주소', widget=forms.TextInput)
 
     class Meta:
         model = Profile
         fields = ('phone', 'receive_email')
+
+    def student_save(self, student):
+        student.school = self.cleaned_data.get('school')
+        student.grade = self.cleaned_data.get('grade')
+        student.age = self.cleaned_data.get('age')
+        student.address1 = self.cleaned_data.get('address1')
+        student.address2 = self.cleaned_data.get('address2')
+
+        student.save()
+
+
+
+
+
+
+
+

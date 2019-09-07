@@ -17,7 +17,7 @@ from django.middleware.csrf import _compare_salted_tokens
 from .mixins import VerificationEmailMixin
 from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm, PasswordChangeForm
 from apps.user.forms import ProfileUpdateForm
-from apps.user.models import EdUser, Temp, Profile
+from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth
 
 
 # 회원가입
@@ -235,10 +235,31 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
     template_name = "user/mypage/update_profile.html"
     success_url = reverse_lazy('user:mypage')
 
-    def get_id(self):
-        email = self.request.user.get_username
-        user = EdUser.objects.get(email=email)
-        return user.id
+    def get_initial(self):
+        group = self.get_group()
+        if group == "학생":
+            student = self.get_student()
+            self.initial = {
+                'school': student.school,
+                'grade': student.grade,
+                'age': student.age,
+                'address1': student.address1,
+                'address2': student.address2,
+            }
+        return super().get_initial()
+
+    def get_group(self):
+        profile = self.get_object(queryset=None)
+        return profile.group
+
+    def get_student(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(Student, profile_id=pk)
+
+    def form_valid(self, form):
+        student = self.get_student()
+        form.student_save(student)
+        return super().form_valid(form)
 
 
 # 여기서부터 소셜 로그인

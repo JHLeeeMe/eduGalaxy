@@ -14,6 +14,7 @@ urlpatterns = [
     path('signup/<int:pk>/delete', user_views.TempDeleteView.as_view(), name='temp_delete'),
     path('mypage/', user_views.EdUserMypageView.as_view(), name='mypage'),
     path('mypage/change_password/', user_views.PasswordChangeView.as_view(), name='change_password'),
+    path('mypage/<int:pk>/update_profile/', user_views.ProfileUpdateView.as_view(), name='update_profile'),
     path('<pk>/verify/<token>/', user_views.EduUserVerificationView.as_view(), name='verify'),
     path('resend_verify_email/', user_views.ResendVerificationEmailView.as_view(), name='resend'),
     path('login/social/<provider>/callback/', user_views.SocialLoginCallbackView.as_view(), name='social_callback'),
