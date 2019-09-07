@@ -1,8 +1,10 @@
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic.edit import FormView, View
+from django.views.generic.edit import FormView, View, UpdateView
 from django.views.generic.base import TemplateView, RedirectView
+
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model, login
 from django.contrib import messages
@@ -13,10 +15,12 @@ from .oauth.providers.naver import NaverLoginMixin
 from django.middleware.csrf import _compare_salted_tokens
 
 from .mixins import VerificationEmailMixin
-from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm
-from apps.user.models import Temp
+from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm, PasswordChangeForm
+from apps.user.forms import ProfileUpdateForm
+from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth
 
 
+# 회원가입
 class EdUserCreateView(FormView):
     form_class = EdUserCreationForm
     template_name = 'user/create_user.html'
@@ -72,11 +76,11 @@ class ProfileCreateView(FormView):
 
             if group == "학생":
                 nexturl = 'user:student'
-            # elif group == "학교 관계자":
-            #     nexturl = 'user:schoolauth'
+            elif group == "학교 관계자":
+                nexturl = 'user:school_auth'
             else:
                 return render(self.request, self.template_name, {
-                    'error_message' : "직업을 선택해주세요",
+                    'error_message': "직업을 선택해주세요",
                 })
             temp.profile = data
             temp.create_date = timezone.now()
@@ -123,6 +127,57 @@ class StudentCreateView(FormView):
         return self.render_to_response(self.get_context_data(form=form))
 
 
+class SchoolAuthCreateView(FormView):
+    form_class = SchoolAuthCreationForm
+    template_name = "user/create_school_auth.html"
+    success_url = reverse_lazy('user:login')
+
+    def get_object(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(Temp, id=pk)
+
+    def get(self, request, *args, **kwargs):
+        return render(self.request, self.template_name, self.get_context_data(**kwargs))
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        temp = self.get_object()
+        data = form.school_auth_data()
+
+        temp.schoolauth = data
+        temp.create_date = timezone.now()
+        temp.save()
+
+        print(type(temp.schoolauth[2]))
+
+        return HttpResponseRedirect(self.get_success_url())
+
+
+#class ResultCreateView(FormView):
+#    form_class = ResultCreationForm
+#    template_name = 'user/create_result.html'
+
+#    def get_object(self):
+#        pk = self.kwargs['pk']
+#        return get_object_or_404(Temp, id=pk)
+
+#    def post(self, request, *args, **kwargs):
+#        form = self.get_form()
+#        if form.is_valid():
+#            return self.form_valid(form)
+#        else:
+#            return self.form_invalid(form)
+
+#    def form_valid(self, form):
+#        return HttpResponseRedirect(self.get_success_url())
+
+
 class TempDeleteView(RedirectView):
     def get_object(self):
         pk = self.kwargs['pk']
@@ -134,6 +189,80 @@ class TempDeleteView(RedirectView):
         return redirect('school:index')
 
 
+# 여기서부터 마이페이지
+class EdUserMypageView(TemplateView, LoginRequiredMixin):
+    template_name = "user/mypage/index.html"
+
+    def get(self, request, *args, **kwargs):
+        email = self.request.user.get_username()
+        eduser = EdUser.objects.get(email=email)
+        pk = eduser.id
+        kwargs.update({'pk': pk})
+        return super().get(request, *args, **kwargs)
+
+
+class PasswordChangeView(FormView, LoginRequiredMixin):
+    form_class = PasswordChangeForm
+    template_name = "user/mypage/change_password.html"
+    success_url = reverse_lazy('user:login')
+
+    def get_object(self):
+        email = self.request.user.get_username()
+        return get_object_or_404(EdUser, email=email)
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(initial=self.initial)
+        context = {'form': form}
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        eduser = self.get_object()
+        form.user_update(eduser)
+        return HttpResponseRedirect(self.get_success_url())
+
+
+class ProfileUpdateView(UpdateView, LoginRequiredMixin):
+    model = Profile
+    context_object_name = 'profile'
+    form_class = ProfileUpdateForm
+    template_name = "user/mypage/update_profile.html"
+    success_url = reverse_lazy('user:mypage')
+
+    def get_initial(self):
+        group = self.get_group()
+        if group == "학생":
+            student = self.get_student()
+            self.initial = {
+                'school': student.school,
+                'grade': student.grade,
+                'age': student.age,
+                'address1': student.address1,
+                'address2': student.address2,
+            }
+        return super().get_initial()
+
+    def get_group(self):
+        profile = self.get_object(queryset=None)
+        return profile.group
+
+    def get_student(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(Student, profile_id=pk)
+
+    def form_valid(self, form):
+        student = self.get_student()
+        form.student_save(student)
+        return super().form_valid(form)
+
+
+# 여기서부터 소셜 로그인
 class EduUserVerificationView(TemplateView):
     model = get_user_model()
     token_generator = default_token_generator
