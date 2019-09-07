@@ -197,8 +197,6 @@ class ResultCreateView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         eduser = get_object_or_404(EdUser, id=kwargs['pk'])
-        print(eduser)
-        print(kwargs['pk'])
 
         return render(request, self.template_name, {'eduser': eduser})
 
