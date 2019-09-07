@@ -49,7 +49,7 @@
 				  <div class="collapse navbar-collapse" id="myNavbar">
 					<ul class="nav navbar-nav navbar-right">
 					  {% if request.user.is_authenticated %}
-						<li><a href="#">myPage</a></li>
+						<li><a href="{% url 'user:mypage' %}">myPage</a></li>
 						<li><a href="{% url 'user:logout' %}">Sign Out</a></li>
 						{% if not request.user.user_confirm %}
 								</ul>
