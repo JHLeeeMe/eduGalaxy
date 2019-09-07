@@ -1,0 +1,57 @@
+{% extends 'school/base.html' %}
+
+{% block gbody %}
+<form name="update_profile_form" action="." method="post"> {% csrf_token %}
+    <div class="container">
+        <h2>프로필 변경</h2>
+        <div class="panel-group">
+            <div class="panel panel-primary">
+                <div class="panel-heading">기본정보 변경</div>
+                <div class="panel-body">
+                    <table>
+                        <tr>
+                            <td>{{ form.phone.label_tag }}</td>
+                            <td>{{ form.phone }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ form.receive_email.label_tag }}</td>
+                            <td>{{ form.receive_email }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="panel panel-primary">
+                <div class="panel-heading">학생정보변경</div>
+                <div class="panel-body">
+                    <table>
+                        <tr>
+                            <td>{{ form.school.label_tag }}</td>
+                            <td>{{ form.school }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ form.grade.label_tag }}</td>
+                            <td>{{ form.grade }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ form.age.label_tag }}</td>
+                            <td>{{ form.age }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ form.address1.label_tag }}</td>
+                            <td>{{ form.address1 }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ form.address2.label_tag }}</td>
+                            <td>{{ form.address2 }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-actions">
+        <button class="btn btn-primary" type="submit">변경</button>
+        <button class="btn btn-danger" onclick="history.back(-1);">취소</button>
+    </div>
+</form>
+{% endblock gbody %}
