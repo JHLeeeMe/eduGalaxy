@@ -3,6 +3,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.edit import FormView, View, UpdateView
 from django.views.generic.base import TemplateView, RedirectView
+from django.core.files.storage import FileSystemStorage
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
@@ -19,6 +20,7 @@ from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCrea
 from apps.user.forms import ProfileUpdateForm
 from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth
 
+import os
 
 # 회원가입
 class EdUserCreateView(FormView):
@@ -95,11 +97,7 @@ class ProfileCreateView(FormView):
 class StudentCreateView(FormView):
     form_class = StudentCreationForm
     template_name = "user/create_student.html"
-    success_url = reverse_lazy('user:login')
-
-    def get_object(self):
-        pk = self.kwargs['pk']
-        return get_object_or_404(Temp, id=pk)
+    success_url = 'user:result'
 
     def get(self, request, *args, **kwargs):
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
@@ -112,16 +110,24 @@ class StudentCreateView(FormView):
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        gender = self.request.POST['gender']
-        data = form.student_data()
-        temp = self.get_object()
-        student = data['front'] + "| " + gender + "| " + data['back']
+        temp = TempUtil(self.kwargs['pk'])
+        temp_object = temp.get_object()
 
-        temp.student = student
-        temp.create_date = timezone.now()
-        temp.save()
+        # EdUer save
+        eduser = temp.eduser_save()
 
-        return HttpResponseRedirect(self.get_success_url())
+        # Profile save
+        profile = temp.profile_save()
+
+        # Student save
+        student = form.student_data(profile)
+        student.gender = self.request.POST.get('gender')  # gender값은 StudentCreationForm에 없고, html에서 넘어옴 for radio btn
+        student.save()
+
+        # Temp delete
+        temp_object.delete()
+
+        return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
@@ -130,11 +136,7 @@ class StudentCreateView(FormView):
 class SchoolAuthCreateView(FormView):
     form_class = SchoolAuthCreationForm
     template_name = "user/create_school_auth.html"
-    success_url = reverse_lazy('user:login')
-
-    def get_object(self):
-        pk = self.kwargs['pk']
-        return get_object_or_404(Temp, id=pk)
+    success_url = 'user:result'
 
     def get(self, request, *args, **kwargs):
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
@@ -147,45 +149,66 @@ class SchoolAuthCreateView(FormView):
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        temp = self.get_object()
-        data = form.school_auth_data()
+        temp = TempUtil(self.kwargs['pk'])
 
-        temp.schoolauth = data
-        temp.create_date = timezone.now()
-        temp.save()
+        # EdUer save
+        eduser = temp.eduser_save()
 
-        print(type(temp.schoolauth[2]))
+        # Profile save
+        profile = temp.profile_save()
 
-        return HttpResponseRedirect(self.get_success_url())
+        # SchoolAuth save
+        school = form.school_auth_data(profile)
+        school.save()
+
+        # Temp delete
+        temp_object = temp.get_object()
+        temp_object.delete()
+
+        return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
 
 
-#class ResultCreateView(FormView):
-#    form_class = ResultCreationForm
-#    template_name = 'user/create_result.html'
+class TempUtil:
+    def __init__(self, pk):
+        self.temp = get_object_or_404(Temp, id=pk)
 
-#    def get_object(self):
-#        pk = self.kwargs['pk']
-#        return get_object_or_404(Temp, id=pk)
+    def get_object(self):
+        return self.temp
 
-#    def post(self, request, *args, **kwargs):
-#        form = self.get_form()
-#        if form.is_valid():
-#            return self.form_valid(form)
-#        else:
-#            return self.form_invalid(form)
+    def eduser_save(self):
+        eduser_data = self.temp.eduser.split('| ')
+        # EdUser
+        self.eduser = EdUser(email=eduser_data[0],
+                             password=eduser_data[1],
+                             nickname=eduser_data[2])
+        self.eduser.save()
+        return self.eduser
 
-#    def form_valid(self, form):
-#        return HttpResponseRedirect(self.get_success_url())
+    def profile_save(self):
+        profile_data = self.temp.profile.split('| ')
+        # Profile
+        profile = Profile(eduser=self.eduser,
+                          group=profile_data[0],
+                          phone=profile_data[1],
+                          receive_email=profile_data[2])
+        profile.save()
+        return profile
+
+
+class ResultCreateView(TemplateView):
+    template_name = 'user/create_result.html'
+
+    def get(self, request, *args, **kwargs):
+        eduser = get_object_or_404(EdUser, id=kwargs['pk'])
+
+        return render(request, self.template_name, {'eduser': eduser})
 
 
 class TempDeleteView(RedirectView):
-    def get_object(self):
-        pk = self.kwargs['pk']
-        return get_object_or_404(Temp, id=pk)
-
     def get(self, request, *args, **kwargs):
-        temp = self.get_object()
-        temp.delete()
+        temp = TempUtil(self.kwargs['pk'])
+        temp_object = temp.get_object()
+        temp_object.delete()
         return redirect('school:index')
 
 
@@ -236,8 +259,8 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
     success_url = reverse_lazy('user:mypage')
 
     def get_initial(self):
-        group = self.get_group()
-        if group == "학생":
+        group = self.get_group_num()
+        if group == 0:
             student = self.get_student()
             self.initial = {
                 'school': student.school,
@@ -246,19 +269,57 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
                 'address1': student.address1,
                 'address2': student.address2,
             }
+        else:
+            schoolauth = self.get_schoolauth()
+            self.initial = {
+                'school': schoolauth.school,
+                'auth_doc': schoolauth.auth_doc,
+                'tel': schoolauth.tel,
+            }
         return super().get_initial()
 
-    def get_group(self):
+    def get_group_num(self):
         profile = self.get_object(queryset=None)
-        return profile.group
+        if profile.group == "학생":
+            num = 0
+        elif profile.group == "학교 관계자":
+            num = 1
+        return num
+
+    def get_file(self):
+        pk = self.kwargs['pk']
+        file = SchoolAuth.objects.filter(profile_id=pk).values_list('auth_doc', flat=True)
+        return file
 
     def get_student(self):
         pk = self.kwargs['pk']
         return get_object_or_404(Student, profile_id=pk)
 
+    def get_schoolauth(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(SchoolAuth, profile_id=pk)
+
+    def get_context_data(self, **kwargs):
+        kwargs.update({'group': self.get_group_num()})
+        return super().get_context_data(**kwargs)
+
     def form_valid(self, form):
-        student = self.get_student()
-        form.student_save(student)
+        group = self.get_group_num()
+        if group == 0:
+            student = self.get_student()
+            form.student_save(student)
+        elif group == 1:
+            schoolauth = self.get_schoolauth()
+            file = self.get_file()
+            file_path = "media/" + file[0]
+
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+
+            data = form.schoolauth_save(schoolauth)
+            data.auth_doc = self.request.FILES['auth_doc']
+            data.save()
+
         return super().form_valid(form)
 
 
@@ -356,44 +417,6 @@ class SocialLoginCallbackView(NaverLoginMixin, View):
             self.request.session[key] = value
 
 # self.send_verification_email(user)
-#
-#
-
-
-# '''
-#     class ModelFormMixin(FormMixin, SingleObjectMixin)
-#     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-#         """If the form is valid, save the associated model."""
-#         self.object = form.save()
-#         return super().form_valid(form)
-#     request.POST 값이 들어있는 form(POST값을 머금은 EduUser)을 save()함
-#
-#     여기서 super().form_valid(form)은
-#     FormMixin에서
-#     def form_valid(self, form):
-#     """If the form is valid, redirect to the supplied URL."""
-#         return HttpResponseRedirect(self.get_success_url())
-#     이렇게 정의 돼있음
-#
-#     즉, ModelFormMixin을 상속받는 CreateView를 상속받지 않았으므로 request.POST를 모델에 저장하는 코드 필요.
-#
-#     form.instance는
-#     modelFormMixin에서 get_form_kwargs()메서드를 정의할 때
-#     'instance'라는 이름으로 self.object(form_valid메서드에서의 그 것)를 딕셔너리(쿼리셋)형태로 집어넣고 리턴해줌
-#     get_form_kwargs()메서드는 FormMixin의 get_form() 메서드에서 쓰임
-#     def get_form(self, form_class=None):
-#     """Return an instance of the form to be used in this view."""
-#     if form_class is None:
-#         form_class = self.get_form_class()
-#     return form_class(**self.get_form_kwargs())
-#     리턴값을 우리 코드로 다시 써보면 EduUser({'instance': self.object, ...})
-#     ModelFormMixin에서 타고타고 올라가다보면
-#     BaseForm에 __init__메서드(생성자) 파라미터 여러 개 중에 하나가 instance인걸로 봐선
-#     어딘가에서 쿼리셋을 키값의 이름을 가진 변수에 밸류값을 넣는 코드가 있을 것으로 판단됨.
-#
-#     결론은 form.instance는 form.save() -> user.save() 이다.
-# '''
 #     response = super().form_valid(form)  # response == HttpResponseRedirect(self.get_success_url())
 #     if form.instance:
 #         self.send_verification_email(form.instance)
