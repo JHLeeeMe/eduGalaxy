@@ -236,8 +236,8 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
     success_url = reverse_lazy('user:mypage')
 
     def get_initial(self):
-        group = self.get_group()
-        if group == "학생":
+        group = self.get_group_num()
+        if group == 0:
             student = self.get_student()
             self.initial = {
                 'school': student.school,
@@ -246,15 +246,29 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
                 'address1': student.address1,
                 'address2': student.address2,
             }
+        else:
+            schoolauth = self.get_schoolauth()
         return super().get_initial()
 
-    def get_group(self):
+    def get_group_num(self):
         profile = self.get_object(queryset=None)
-        return profile.group
+        if profile.group == "학생":
+            num = 0
+        elif profile.group == "학교 관계자":
+            num = 1
+        return num
 
     def get_student(self):
         pk = self.kwargs['pk']
         return get_object_or_404(Student, profile_id=pk)
+
+    def get_schoolauth(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(SchoolAuth, profile_id=pk)
+
+    def get_context_data(self, **kwargs):
+        kwargs.update({'group': self.get_group_num()})
+        return super().get_context_data(**kwargs)
 
     def form_valid(self, form):
         student = self.get_student()
