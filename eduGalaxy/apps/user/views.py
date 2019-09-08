@@ -95,11 +95,7 @@ class ProfileCreateView(FormView):
 class StudentCreateView(FormView):
     form_class = StudentCreationForm
     template_name = "user/create_student.html"
-    success_url = reverse_lazy('user:login')
-
-    def get_object(self):
-        pk = self.kwargs['pk']
-        return get_object_or_404(Temp, id=pk)
+    success_url = 'user:result'
 
     def get(self, request, *args, **kwargs):
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
@@ -112,16 +108,24 @@ class StudentCreateView(FormView):
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        gender = self.request.POST['gender']
-        data = form.student_data()
-        temp = self.get_object()
-        student = data['front'] + "| " + gender + "| " + data['back']
+        temp = TempUtil(self.kwargs['pk'])
+        temp_object = temp.get_object()
 
-        temp.student = student
-        temp.create_date = timezone.now()
-        temp.save()
+        # EdUer save
+        eduser = temp.eduser_save()
 
-        return HttpResponseRedirect(self.get_success_url())
+        # Profile save
+        profile = temp.profile_save()
+
+        # Student save
+        student = form.student_data(profile)
+        student.gender = self.request.POST.get('gender')  # gender값은 StudentCreationForm에 없고, html에서 넘어옴 for radio btn
+        student.save()
+
+        # Temp delete
+        temp_object.delete()
+
+        return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
@@ -130,11 +134,7 @@ class StudentCreateView(FormView):
 class SchoolAuthCreateView(FormView):
     form_class = SchoolAuthCreationForm
     template_name = "user/create_school_auth.html"
-    success_url = reverse_lazy('user:login')
-
-    def get_object(self):
-        pk = self.kwargs['pk']
-        return get_object_or_404(Temp, id=pk)
+    success_url = 'user:result'
 
     def get(self, request, *args, **kwargs):
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
@@ -147,45 +147,69 @@ class SchoolAuthCreateView(FormView):
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        temp = self.get_object()
-        data = form.school_auth_data()
+        temp = TempUtil(self.kwargs['pk'])
+        temp_object = temp.get_object()
 
-        temp.schoolauth = data
-        temp.create_date = timezone.now()
-        temp.save()
+        # EdUer save
+        eduser = temp.eduser_save()
 
-        print(type(temp.schoolauth[2]))
+        # Profile save
+        profile = temp.profile_save()
 
-        return HttpResponseRedirect(self.get_success_url())
+        # SchoolAuth save
+        school = form.school_auth_data(profile)
+        school.save()
+
+        # Temp delete
+        temp_object.delete()
+
+        return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
 
 
-#class ResultCreateView(FormView):
-#    form_class = ResultCreationForm
-#    template_name = 'user/create_result.html'
+class TempUtil:
+    def __init__(self, pk):
+        self.temp = get_object_or_404(Temp, id=pk)
 
-#    def get_object(self):
-#        pk = self.kwargs['pk']
-#        return get_object_or_404(Temp, id=pk)
+    def get_object(self):
+        return self.temp
 
-#    def post(self, request, *args, **kwargs):
-#        form = self.get_form()
-#        if form.is_valid():
-#            return self.form_valid(form)
-#        else:
-#            return self.form_invalid(form)
+    def eduser_save(self):
+        eduser_data = self.temp.eduser.split('| ')
+        # EdUser
+        self.eduser = EdUser(email=eduser_data[0],
+                             password=eduser_data[1],
+                             nickname=eduser_data[2])
+        self.eduser.save()
+        return self.eduser
 
-#    def form_valid(self, form):
-#        return HttpResponseRedirect(self.get_success_url())
+    def profile_save(self):
+        profile_data = self.temp.profile.split('| ')
+        # Profile
+        profile = Profile(eduser=self.eduser,
+                          group=profile_data[0],
+                          phone=profile_data[1],
+                          receive_email=profile_data[2])
+        profile.save()
+        return profile
+
+    def delete(self):
+        self.temp.delete()
+
+
+class ResultCreateView(TemplateView):
+    template_name = 'user/create_result.html'
+
+    def get(self, request, *args, **kwargs):
+        eduser = get_object_or_404(EdUser, id=kwargs['pk'])
+
+        return render(request, self.template_name, {'eduser': eduser})
 
 
 class TempDeleteView(RedirectView):
-    def get_object(self):
-        pk = self.kwargs['pk']
-        return get_object_or_404(Temp, id=pk)
-
     def get(self, request, *args, **kwargs):
-        temp = self.get_object()
-        temp.delete()
+        temp = TempUtil(self.kwargs['pk'])
+        temp_object = temp.get_object()
+        temp_object.delete()
         return redirect('school:index')
 
 

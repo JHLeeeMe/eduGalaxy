@@ -11,6 +11,7 @@ urlpatterns = [
     path('signup/<int:pk>/profile/', user_views.ProfileCreateView.as_view(), name='profile'),
     path('signup/<int:pk>/student/', user_views.StudentCreateView.as_view(), name='student'),
     path('signup/<int:pk>/school_auth/', user_views.SchoolAuthCreateView.as_view(), name='school_auth'),
+    path('signup/<int:pk>/result/', user_views.ResultCreateView.as_view(), name='result'),
     path('signup/<int:pk>/delete', user_views.TempDeleteView.as_view(), name='temp_delete'),
     path('mypage/', user_views.EdUserMypageView.as_view(), name='mypage'),
     path('mypage/change_password/', user_views.PasswordChangeView.as_view(), name='change_password'),
