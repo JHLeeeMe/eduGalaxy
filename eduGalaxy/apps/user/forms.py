@@ -173,7 +173,6 @@ class StudentCreationForm(forms.Form):
         return student
 
 
-
 class SchoolAuthCreationForm(forms.ModelForm):
     class Meta:
         model = SchoolAuth
@@ -182,6 +181,7 @@ class SchoolAuthCreationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(SchoolAuthCreationForm, self).__init__(*args, **kwargs)
         self.fields['auth_doc'].required = False
+        self.fields['tel'].required = False
 
     def school_auth_data(self, profile):
         school = self.cleaned_data.get('school')
@@ -240,7 +240,7 @@ class PasswordChangeForm(forms.Form):
 
 
 class ProfileUpdateForm(forms.ModelForm):
-    school = forms.CharField(label='다니는 학교', widget=forms.TextInput)
+    school = forms.CharField(label='학교', widget=forms.TextInput)
 
     grade_list = range(0, 7)
     GRADE = []
@@ -275,6 +275,19 @@ class ProfileUpdateForm(forms.ModelForm):
     address1 = forms.CharField(label='주소', widget=forms.TextInput)
     address2 = forms.CharField(label='상세 주소', widget=forms.TextInput)
 
+    auth_doc = forms.FileField(label='인증서류')
+    tel = forms.CharField(label='사무실 연락처', max_length=15)
+
+    def __init__(self, *args, **kwargs):
+        super(ProfileUpdateForm, self).__init__(*args, **kwargs)
+        self.fields['auth_doc'].required = False
+        self.fields['tel'].required = False
+        self.fields['school'].required = False
+        self.fields['grade'].required = False
+        self.fields['age'].required = False
+        self.fields['address1'].required = False
+        self.fields['address2'].required = False
+
     class Meta:
         model = Profile
         fields = ('phone', 'receive_email')
@@ -287,4 +300,11 @@ class ProfileUpdateForm(forms.ModelForm):
         student.address2 = self.cleaned_data.get('address2')
 
         student.save()
+
+    def schoolauth_save(self, schoolauth):
+        schoolauth.school = self.cleaned_data.get('school')
+        schoolauth.tel = self.cleaned_data.get('tel')
+
+        return schoolauth
+
 
