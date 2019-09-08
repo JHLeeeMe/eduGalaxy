@@ -155,24 +155,23 @@ class StudentCreationForm(forms.Form):
     )
     address1 = forms.CharField(label='주소', widget=forms.TextInput)
     address2 = forms.CharField(label='상세 주소', widget=forms.TextInput)
-
-    # 학력 추가 필요
-    def student_data(self):
+    
+     # 학력 추가 필요
+    def student_data(self, profile):
         school = self.cleaned_data.get('school')
         grade = self.cleaned_data.get('grade')
         age = self.cleaned_data.get('age')
         address1 = self.cleaned_data.get('address1')
         address2 = self.cleaned_data.get('address2')
 
-        front = school + "| " + str(grade) + "| " + str(age)
-        back = address1 + "| " + address2
+        student = Student(profile=profile,
+                          school=school,
+                          grade=grade,
+                          age=age,
+                          address1=address1,
+                          address2=address2)
+        return student
 
-        data = {
-            'front': front,
-            'back': back
-        }
-
-        return data
 
 
 class SchoolAuthCreationForm(forms.ModelForm):
@@ -184,13 +183,16 @@ class SchoolAuthCreationForm(forms.ModelForm):
         super(SchoolAuthCreationForm, self).__init__(*args, **kwargs)
         self.fields['auth_doc'].required = False
 
-    def school_auth_data(self):
+    def school_auth_data(self, profile):
         school = self.cleaned_data.get('school')
         tel = self.cleaned_data.get('tel')
         auth_doc = self.cleaned_data.get('auth_doc')
 
-        data = [school, tel, auth_doc]
-        return data
+        school_auth = SchoolAuth(profile=profile,
+                                 school=school,
+                                 tel=tel,
+                                 auth_doc=auth_doc)
+        return school_auth
 
 
 class PasswordChangeForm(forms.Form):
@@ -285,11 +287,4 @@ class ProfileUpdateForm(forms.ModelForm):
         student.address2 = self.cleaned_data.get('address2')
 
         student.save()
-
-
-
-
-
-
-
 
