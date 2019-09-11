@@ -53,8 +53,7 @@ function kakaoLogin(){
 function checkLoginStatus() {
     console.log('checkLoginStatus()');
     if(gauth.isSignedIn.get()) {
-//        window.profile = gauth.currentUser.get().getBasicProfile();
-        window.profile = gauth.currentUser.get();
+        window.profile = gauth.currentUser.get().getBasicProfile();
         console.log(profile.getId())
     } else {
         console.log('is not SignedIn');
@@ -85,7 +84,7 @@ function googleLogin() {
     window.provider = 'google'
     gauth.signIn().then(function() {
         checkLoginStatus();
-        if (profile.getId() != null) {
+        if (profile.getId()!= null) {
             post_to_url();
         } else {
             alert('login failed')
@@ -101,17 +100,20 @@ function post_to_url() {
         console.log('provider = ' + provider)
         inputHiddenForm();
         form.setAttribute("action", location.origin + '/user/login/social/google/callback/' + location.search);
-        hiddenField.setAttribute("value", profile.getId());
+        hiddenFieldForID.setAttribute("value", profile.getId());
+        hiddenFieldForNickName.setAttribute("value", profile.getName());
 
     } else if (provider == 'kakao') {
         inputHiddenForm();
         form.setAttribute("action", location.origin + '/user/login/social/kakao/callback/' + location.search);
-        hiddenField.setAttribute("value", userID);
+        hiddenFieldForID.setAttribute("value", userID);
+        hiddenFieldForNickName.setAttribute("value", userNickName);
     } else {
         console.log('provider is null')
     }
-    form.appendChild(hiddenField);
+    form.appendChild(hiddenFieldForID);
     form.appendChild(hiddenFieldForCsrf);
+    form.appendChild(hiddenFieldForNickName);
     document.body.appendChild(form);
     form.submit();
 
@@ -121,9 +123,13 @@ function post_to_url() {
         form.setAttribute("method", method);
 
         //히든으로 값을 주입시킨다.
-        window.hiddenField = document.createElement("input");
-        hiddenField.setAttribute("name", 'id');
-        hiddenField.setAttribute("type", "hidden");
+        window.hiddenFieldForID = document.createElement("input");
+        hiddenFieldForID.setAttribute("name", 'id');
+        hiddenFieldForID.setAttribute("type", "hidden");
+
+        window.hiddenFieldForNickName = document.createElement("input");
+        hiddenFieldForNickName.setAttribute("name", 'nickName');
+        hiddenFieldForNickName.setAttribute("type", "hidden");
 
         window.hiddenFieldForCsrf = document.createElement("input");
         hiddenFieldForCsrf.setAttribute("type", "hidden");

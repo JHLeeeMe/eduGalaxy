@@ -16,7 +16,7 @@
                 <h1 align="center">회원 가입</h1>
             </div>
 
-        {% include 'user/social_login_panel.html' with panel_name="소셜회원가입" %}
+        {% include 'user/social/social_login_panel.html' with panel_name="소셜회원가입" %}
 
             <div class="panel-body">
                 <form name="Signup_Form" action="." method="post"> {% csrf_token %}
