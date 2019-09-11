@@ -1,6 +1,11 @@
 from django.conf import settings
 from django.contrib.auth import login
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
+from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
 
+from apps.user.models import Temp
 import requests
 
 
@@ -37,9 +42,9 @@ class NaverClient:
 class NaverLoginMixin:
     naver_client = NaverClient()
 
-    def login_with_naver(self, state, code):
+    def login_or_create_with_naver(self, state, code):
         
-        # 인증토근 발급
+        # 인증토큰 발급
         is_success, token_infos = self.naver_client.get_access_token(state, code)
 
         if not is_success:
@@ -55,25 +60,31 @@ class NaverLoginMixin:
         if not is_success:
             return False, profiles
 
-        # 사용자 생성 또는 업데이트
-        user, created = self.model.objects.get_or_create(user_email=profiles.get('id') + '@naver.comm')
-        if created:  # 사용자 생성할 경우
-            user.set_password(None)
-            user.user_nickname = profiles.get('id')
-            user.user_gender = profiles.get('gender')
-            user.user_confirm = True
-            user.save()
-
-        # 로그인
-        login(self.request, user, backend='user.oauth.backends.NaverBackend')
-
         # 세션데이터 추가
-        self.set_session(access_token=access_token, refresh_token=refresh_token, expires_in=expires_in, token_type=token_type)
+        self.set_session(access_token=access_token, refresh_token=refresh_token,
+                         expires_in=expires_in, token_type=token_type)
+
+        # 사용자 로그인 or 생성
+        try:
+            user = self.model.objects.get(email=profiles.get('id') + '@social.naver')
+            login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+        except ObjectDoesNotExist:  # EdUser 모델이 없을 경우
+            # Temp save
+            data = profiles.get('id') + '@social.naver' + '| ' + \
+                                                          'social_password' + '| ' + profiles.get('nickname')
+            temp = Temp(eduser=data)
+            temp.create_date = timezone.now()
+            temp.save()
+
+            is_success = True
+            success_url = reverse_lazy('user:profile', kwargs={'pk': temp.id})
+            return HttpResponseRedirect(reverse_lazy(success_url if is_success else self.failure_url))
 
         return True, user
 
     def get_naver_profile(self, access_token, token_type):
         is_success, profiles = self.naver_client.get_profile(access_token, token_type)
+        print(profiles)
 
         if not is_success:
             return False, profiles
