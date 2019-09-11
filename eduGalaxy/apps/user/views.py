@@ -13,6 +13,7 @@ from django.utils import timezone
 # social auth
 from .oauth.providers.naver import NaverLoginMixin
 from django.middleware.csrf import _compare_salted_tokens
+from django.core.exceptions import ObjectDoesNotExist
 
 from .mixins import VerificationEmailMixin
 from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm, PasswordChangeForm
@@ -148,7 +149,6 @@ class SchoolAuthCreateView(FormView):
 
     def form_valid(self, form):
         temp = TempUtil(self.kwargs['pk'])
-        temp_object = temp.get_object()
 
         # EdUer save
         eduser = temp.eduser_save()
@@ -161,6 +161,7 @@ class SchoolAuthCreateView(FormView):
         school.save()
 
         # Temp delete
+        temp_object = temp.get_object()
         temp_object.delete()
 
         return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
@@ -169,31 +170,30 @@ class SchoolAuthCreateView(FormView):
 class TempUtil:
     def __init__(self, pk):
         self.temp = get_object_or_404(Temp, id=pk)
+        self.choice = ['google', 'kakao', 'naver']
 
     def get_object(self):
         return self.temp
 
     def eduser_save(self):
         eduser_data = self.temp.eduser.split('| ')
-        # EdUser
         self.eduser = EdUser(email=eduser_data[0],
                              password=eduser_data[1],
                              nickname=eduser_data[2])
+
+        if eduser_data[0].endswith(tuple(self.choice)):  # email의 끝글자가 self.choice 중 하나이면 True 반환
+            self.eduser.set_password(None)
         self.eduser.save()
         return self.eduser
 
     def profile_save(self):
         profile_data = self.temp.profile.split('| ')
-        # Profile
         profile = Profile(eduser=self.eduser,
                           group=profile_data[0],
                           phone=profile_data[1],
                           receive_email=profile_data[2])
         profile.save()
         return profile
-
-    def delete(self):
-        self.temp.delete()
 
 
 class ResultCreateView(TemplateView):
@@ -329,95 +329,72 @@ class SocialLoginCallbackView(NaverLoginMixin, View):
 
     success_url = reverse_lazy('school:index')
     failure_url = reverse_lazy('user:login')
-    required_profiles = ['email', 'gender']
+    required_profiles = ['email', 'profile']
     model = get_user_model()
     oauth_user_id = None
+    oauth_user_nickName = None
+    is_success = False
 
     def get(self, request, **kwargs):
-
         provider = kwargs.get('provider')
         success_url = request.GET.get('next', self.success_url)
 
-        if provider == 'naver':  # 프로바이더가 naver 일 경우
+        if provider == 'naver':
             csrf_token = request.GET.get('state')
             code = request.GET.get('code')
+
             if not _compare_salted_tokens(csrf_token, request.COOKIES.get('csrftoken')):  # state(csrf_token)이 잘못된 경우
                 messages.error(request, '잘못된 경로로 로그인하셨습니다.', extra_tags='danger')
                 return HttpResponseRedirect(self.failure_url)
-            is_success, error = self.login_with_naver(csrf_token, code)
-            if not is_success:  # 로그인 실패할 경우
+            is_success, error = self.login_or_create_with_naver(csrf_token, code)
+            print('haohfoahsdofhoashdfoahdsohfohsdof')
+            print(is_success)
+            if not is_success:  # 로그인 or 생성 실패
+                print('44444############################################################!$#@%$#$%#')
                 messages.error(request, error, extra_tags='danger')
             return HttpResponseRedirect(success_url if is_success else self.failure_url)
 
-        elif provider == 'google':
-            user, created = self.model.objects.get_or_create(user_email=self.oauth_user_id + '@google.comm')
-            if created:  # 사용자 생성할 경우
-                user.set_password(None)
-                user.user_nickname = self.oauth_user_id
-                user.user_confirm = True
-                user.save()
-            return login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+        elif provider == 'google' or provider == 'kakao':
+            self.work(provider)
+        else:
+            return HttpResponseRedirect(self.failure_url)
 
-        elif provider == 'kakao':
-            user, created = self.model.objects.get_or_create(user_email=self.oauth_user_id + '@kakao.comm')
-            if created:
-                user.set_password(None)
-                user.user_nickname = self.oauth_user_id
-                user.user_confirm = True
-                user.save()
-            return login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
-
-        return HttpResponseRedirect(self.failure_url)
-
-    def post(self, request, *args, **kwargs):
+    def post(self, request, **kwargs):
         self.oauth_user_id = request.POST.get('id')
-        SocialLoginCallbackView.get(self, request, *args, **kwargs)
-        is_success = request.user.is_authenticated
-        return HttpResponseRedirect(self.success_url if is_success else self.failure_url)
+        self.oauth_user_nickName = request.POST.get('nickName')
+        SocialLoginCallbackView.get(self, request, **kwargs)
+        # is_success = request.user.is_authenticated
+        return HttpResponseRedirect(self.success_url if self.is_success else self.failure_url)
+
+    def work(self, provider):
+        """
+        기존 사용자는 login
+        새로 가입하는 사용자는 Temp 테이블에 psv 형태로 저장 & user:profile url로 redirect
+        """
+        try:
+            user = self.model.objects.get(email=self.oauth_user_id + '@social.' + provider)
+            self.is_success = True
+            login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+        except ObjectDoesNotExist:  # EdUser 모델이 없을 경우
+            if self.oauth_user_nickName == 'undefiend':
+                self.oauth_user_nickName = self.oauth_user_id
+
+            # Temp save
+            data = self.oauth_user_id + '@social.' + provider + '| ' + \
+                                                                'social_password' + '| ' + self.oauth_user_nickName
+            temp = Temp(eduser=data)
+            temp.create_date = timezone.now()
+            temp.save()
+            self.is_success = True
+            self.success_url = reverse_lazy('user:profile', kwargs={'pk': temp.id})
 
     def set_session(self, **kwargs):
         for key, value in kwargs.items():
             self.request.session[key] = value
 
+
 # self.send_verification_email(user)
 #
-#
-
-
-# '''
-#     class ModelFormMixin(FormMixin, SingleObjectMixin)
-#     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-#         """If the form is valid, save the associated model."""
-#         self.object = form.save()
-#         return super().form_valid(form)
-#     request.POST 값이 들어있는 form(POST값을 머금은 EduUser)을 save()함
-#
-#     여기서 super().form_valid(form)은
-#     FormMixin에서
-#     def form_valid(self, form):
-#     """If the form is valid, redirect to the supplied URL."""
-#         return HttpResponseRedirect(self.get_success_url())
-#     이렇게 정의 돼있음
-#
-#     즉, ModelFormMixin을 상속받는 CreateView를 상속받지 않았으므로 request.POST를 모델에 저장하는 코드 필요.
-#
-#     form.instance는
-#     modelFormMixin에서 get_form_kwargs()메서드를 정의할 때
-#     'instance'라는 이름으로 self.object(form_valid메서드에서의 그 것)를 딕셔너리(쿼리셋)형태로 집어넣고 리턴해줌
-#     get_form_kwargs()메서드는 FormMixin의 get_form() 메서드에서 쓰임
-#     def get_form(self, form_class=None):
-#     """Return an instance of the form to be used in this view."""
-#     if form_class is None:
-#         form_class = self.get_form_class()
-#     return form_class(**self.get_form_kwargs())
-#     리턴값을 우리 코드로 다시 써보면 EduUser({'instance': self.object, ...})
-#     ModelFormMixin에서 타고타고 올라가다보면
-#     BaseForm에 __init__메서드(생성자) 파라미터 여러 개 중에 하나가 instance인걸로 봐선
-#     어딘가에서 쿼리셋을 키값의 이름을 가진 변수에 밸류값을 넣는 코드가 있을 것으로 판단됨.
-#
-#     결론은 form.instance는 form.save() -> user.save() 이다.
-# '''
 #     response = super().form_valid(form)  # response == HttpResponseRedirect(self.get_success_url())
 #     if form.instance:
 #         self.send_verification_email(form.instance)

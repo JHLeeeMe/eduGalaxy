@@ -173,7 +173,6 @@ class StudentCreationForm(forms.Form):
         return student
 
 
-
 class SchoolAuthCreationForm(forms.ModelForm):
     class Meta:
         model = SchoolAuth
