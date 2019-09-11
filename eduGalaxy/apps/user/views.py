@@ -22,6 +22,7 @@ from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth
 
 import os
 
+
 # 회원가입
 class EdUserCreateView(FormView):
     form_class = EdUserCreationForm
@@ -303,6 +304,11 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
         kwargs.update({'group': self.get_group_num()})
         return super().get_context_data(**kwargs)
 
+    def get(self, request, *args, **kwargs):
+        form = self.get_form()
+        print(form)
+        super().get(request, *args, **kwargs)
+
     def form_valid(self, form):
         group = self.get_group_num()
         if group == 0:
@@ -321,6 +327,14 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
             data.save()
 
         return super().form_valid(form)
+
+
+# 회원 탈퇴 뷰
+class EdUserDeleteView(RedirectView, LoginRequiredMixin):
+    def get(self, request, *args, **kwargs):
+        eduser = get_object_or_404(EdUser, id=kwargs['pk'])
+        eduser.delete()
+        return redirect('school:index')
 
 
 # 여기서부터 소셜 로그인
