@@ -20,6 +20,9 @@
 
             <div class="panel-body">
                 <form name="Signup_Form" action="." method="post"> {% csrf_token %}
+                    {% if form.errors %}
+                        {{ form.non_field_errors }}
+                    {% endif %}
                     <table>
                         <tr>
                             <td>{{ form.email1.label_tag }}</td>
