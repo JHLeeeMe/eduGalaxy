@@ -61,22 +61,32 @@ class EdUserCreationForm(forms.Form):
 
     nickname = forms.CharField(label='닉네임', widget=forms.TextInput)
 
+    def clean(self):
+        cleaned_data = super().clean()
+        password = self.clean_password2()
+        nickname = cleaned_data.get()
+        email = self.make_email()
+
+        check_email = EdUser.objects.filler(email=email)
+        check_nickname = EdUser.objects.filler(nickname=nickname)
+        if check_email.exists():
+            raise forms.ValidationError("해당 이메일은 이미 가입하셨습니다.")
+        if check_nickname.exists():
+            raise forms.ValidationError("존재하는 닉네임입니다.")
+        return cleaned_data
+
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
 
         if password1 and password2 and password1 != password2:
-            raise forms.ValidationError(
-                self.error_messages['password_mismatch'],
-                code='password_mismatch',
-            )
+            raise forms.ValidationError("비밀번호 오류입니다. 다시 입력해주세요")
         return password2
 
     def save(self, commit=True):
-        password = self.cleaned_data.get("password1")
-        nickname = self.cleaned_data.get("nickname")
-
         email = self.make_email()
+        password = self.clean_password2()
+        nickname = self.cleaned_data.get("nickname")
 
         eduser = email + "| " + password + "| " + nickname
         temp = Temp(eduser=eduser)
