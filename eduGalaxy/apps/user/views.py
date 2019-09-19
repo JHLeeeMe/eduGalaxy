@@ -40,9 +40,6 @@ class EdUserCreateView(FormView):
         eduser_id = temp.id
         return HttpResponseRedirect(reverse_lazy('user:profile', kwargs={'pk': eduser_id}))
 
-    def form_invalid(self, form):
-        return self.render_to_response(self.get_context_data(form=form))
-
 
 class ProfileCreateView(FormView):
     form_class = ProfileCreationForm
