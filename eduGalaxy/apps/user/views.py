@@ -173,7 +173,8 @@ class SchoolAuthCreateView(FormView):
 class TempUtil:
     def __init__(self, pk):
         self.temp = get_object_or_404(Temp, id=pk)
-        self.choice = ['google', 'kakao', 'naver']
+        # self.choice = ['_google', '_naver']  # 비밀번호 설정할 때 언더스코어는 불가
+        self.provider = None
 
     def get_object(self):
         return self.temp
@@ -184,8 +185,13 @@ class TempUtil:
                              password=eduser_data[1],
                              nickname=eduser_data[2])
 
-        if eduser_data[0].endswith(tuple(self.choice)):  # email의 끝글자가 self.choice 중 하나이면 True 반환
+        if len(eduser_data) > 3:
             self.eduser.set_password(None)
+            self.provider = eduser_data[-1]
+        # if eduser_data[1].endswith(tuple(self.choice)):  # password의 끝글자가 self.choice 중 하나이면 True 반환
+        #     self.eduser.set_password(None)
+        #     self.provider = eduser_data[1][1:]  # 언더스코어를 뺀 str값을 저장 (ex 'naver' or 'google')
+
         self.eduser.save()
         return self.eduser
 
@@ -195,6 +201,14 @@ class TempUtil:
                           group=profile_data[0],
                           phone=profile_data[1],
                           receive_email=profile_data[2])
+
+        # self.provider에 따른 컬럼값(default == False) 수정
+        if self.provider is not None:
+            profile.confirm = True
+            if self.provider == 'naver':
+                profile.is_naver = True
+            elif self.provider == 'google':
+                profile.is_google = True
         profile.save()
         return profile
 
@@ -357,10 +371,11 @@ class EduUserVerificationView(TemplateView):
         pk = kwargs.get('pk')
         token = kwargs.get('token')
         user = self.model.objects.get(pk=pk)
+        profile = Profile.objects.get(eduser_id=pk)
         is_valid = self.token_generator.check_token(user, token)
         if is_valid:
-            user.user_confirm = True
-            user.save()
+            profile.confirm = True
+            profile.save()
         return is_valid
 
 
@@ -368,9 +383,9 @@ class ResendVerificationEmailView(View, VerificationEmailMixin):
     model = get_user_model()
 
     def get(self, request):
-        if request.user.is_authenticated and not request.user.user_confirm:
+        if request.user.is_authenticated and not request.user.confirm:
             try:
-                user = self.model.objects.get(user_email=request.user.user_email)
+                user = self.model.objects.get(email=request.user.email)
             except self.model.DoesNotExist:
                 messages.error(self.request, '알 수 없는 사용자 입니다.')
             else:
@@ -379,11 +394,10 @@ class ResendVerificationEmailView(View, VerificationEmailMixin):
         return HttpResponseRedirect(reverse('school:index'))
 
 
-class SocialLoginCallbackView(NaverLoginMixin, View):
+class SocialLoginCallbackView(NaverLoginMixin, View, VerificationEmailMixin):
 
-    success_url = reverse_lazy('school:index')
     failure_url = reverse_lazy('user:login')
-    required_profiles = ['email', 'profile']
+    required_profiles = ['email']
     model = get_user_model()
     oauth_user_id = None
     oauth_user_nickName = None
@@ -391,7 +405,7 @@ class SocialLoginCallbackView(NaverLoginMixin, View):
 
     def get(self, request, **kwargs):
         provider = kwargs.get('provider')
-        success_url = request.GET.get('next', self.success_url)
+        # success_url = request.GET.get('next', self.success_url)
 
         if provider == 'naver':
             csrf_token = request.GET.get('state')
@@ -400,13 +414,16 @@ class SocialLoginCallbackView(NaverLoginMixin, View):
             if not _compare_salted_tokens(csrf_token, request.COOKIES.get('csrftoken')):  # state(csrf_token)이 잘못된 경우
                 messages.error(request, '잘못된 경로로 로그인하셨습니다.', extra_tags='danger')
                 return HttpResponseRedirect(self.failure_url)
-            is_success, error = self.login_or_create_with_naver(csrf_token, code)
-            print('haohfoahsdofhoashdfoahdsohfohsdof')
-            print(is_success)
+            is_success, data = self.login_or_create_with_naver(csrf_token, code)
             if not is_success:  # 로그인 or 생성 실패
-                print('44444############################################################!$#@%$#$%#')
-                messages.error(request, error, extra_tags='danger')
-            return HttpResponseRedirect(success_url if is_success else self.failure_url)
+                if type(data) is list:  # profile.confirm 이 False 일때는 data가 리스트형태로 리턴
+                    user = data[2]
+                    self.send_verification_email(user)
+                    messages.error(request, data[0], extra_tags='danger')
+                    return HttpResponseRedirect(data[1])
+                else:
+                    messages.error(request, data, extra_tags='danger')
+            return HttpResponseRedirect(data if is_success else self.failure_url)
 
         elif provider == 'google' or provider == 'kakao':
             self.work(provider)
@@ -445,11 +462,4 @@ class SocialLoginCallbackView(NaverLoginMixin, View):
     def set_session(self, **kwargs):
         for key, value in kwargs.items():
             self.request.session[key] = value
-
-# self.send_verification_email(user)
-
-#     response = super().form_valid(form)  # response == HttpResponseRedirect(self.get_success_url())
-#     if form.instance:
-#         self.send_verification_email(form.instance)
-#     return response
 

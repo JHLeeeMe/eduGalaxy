@@ -30,13 +30,14 @@ function kakaoLogin(){
         success: function(authObj) {
             console.log(JSON.stringify(authObj));
             // 로그인 성공시, API를 호출합니다.
-            Kakao.API.  request({
-                url: '/v1/user/me',
+            Kakao.API.request({
+                url: '/v2/user/me',
                 success: function(res) {
                     window.userID = res.id;						//유저의 카카오톡 고유 id
                     window.userNickName = res.properties.nickname;	//유저가 등록한 별명
+                    console.log(res.kakao_account.email);
 
-                    post_to_url(); // Id 값과 nickname 값을 백엔드로 input 태그를 이용해 보냄
+                    //post_to_url(); // Id 값과 nickname 값을 백엔드로 input 태그를 이용해 보냄
                 },
                 fail: function(error) {
                     alert(JSON.stringify(error));
@@ -46,6 +47,7 @@ function kakaoLogin(){
         fail: function(errorObj) {
             alert(JSON.stringify(errorObj));
             alert('Login failed');
+            Kakao.cleanup();
         }
     });
 }
@@ -54,7 +56,6 @@ function checkLoginStatus() {
     console.log('checkLoginStatus()');
     if(gauth.isSignedIn.get()) {
         window.profile = gauth.currentUser.get().getBasicProfile();
-        console.log(profile.getId())
     } else {
         console.log('is not SignedIn');
     }
