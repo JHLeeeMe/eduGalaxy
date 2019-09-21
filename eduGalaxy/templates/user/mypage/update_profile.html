@@ -1,7 +1,7 @@
 {% extends 'school/base.html' %}
 
 {% block gbody %}
-<form name="update_profile_form" action="." method="post"> {% csrf_token %}
+<form name="update_profile_form" action="." method="post" enctype="multipart/form-data"> {% csrf_token %}
     <div class="container">
         <h2>프로필 변경</h2>
         <div class="panel-group">
@@ -20,6 +20,7 @@
                     </table>
                 </div>
             </div>
+            {% if group == 0 %}
             <div class="panel panel-primary">
                 <div class="panel-heading">학생정보변경</div>
                 <div class="panel-body">
@@ -47,6 +48,27 @@
                     </table>
                 </div>
             </div>
+            {% elif group == 1 %}
+            <div class="panel panel-primary">
+                <div class="panel-heading">학교 관계자 정보변경</div>
+                <div class="panel-body">
+                    <table>
+                        <tr>
+                            <td>{{ form.school.label_tag }}</td>
+                            <td>{{ form.school }}<br><br></td>
+                        </tr>
+                        <tr>
+                            <td>{{ form.auth_doc.label_tag }}</td>
+                            <td>{{ form.auth_doc }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ form.tel.label_tag }}</td>
+                            <td>{{ form.tel }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
     <div class="form-actions">

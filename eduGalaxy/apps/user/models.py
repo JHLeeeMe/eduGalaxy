@@ -104,11 +104,15 @@ class Profile(models.Model):
     group = models.CharField(max_length=30, verbose_name='직업')
     phone = models.CharField(max_length=15, verbose_name='핸드폰 번호')
     receive_email = models.BooleanField(default=False, verbose_name='이메일 수신 여부')
+    is_naver = models.BooleanField(default=False, verbose_name='네이버 연동 여부')
+    is_google = models.BooleanField(default=False, verbose_name='구글 연동 여부')
     confirm = models.BooleanField(default=False, verbose_name='본인인증 여부')
 
     class Meta:
         verbose_name = '사용자 프로필'
         verbose_name_plural = '사용자 프로필'
+
+    objects = EdUserManager()
 
 
 # 학교 관계자 테이블
