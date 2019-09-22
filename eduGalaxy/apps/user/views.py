@@ -213,11 +213,12 @@ class TempUtil:
         return profile
 
 
-class ResultCreateView(TemplateView):
+class ResultCreateView(TemplateView, VerificationEmailMixin):
     template_name = 'user/create_result.html'
 
     def get(self, request, *args, **kwargs):
         eduser = get_object_or_404(EdUser, id=kwargs['pk'])
+        self.send_verification_email(eduser)  # email resend
 
         return render(request, self.template_name, {'eduser': eduser})
 
@@ -404,6 +405,7 @@ class SocialLoginCallbackView(NaverLoginMixin, View, VerificationEmailMixin):
     is_success = False
 
     def get(self, request, **kwargs):
+        print('222222222222222222222')
         provider = kwargs.get('provider')
         # success_url = request.GET.get('next', self.success_url)
 
@@ -424,40 +426,71 @@ class SocialLoginCallbackView(NaverLoginMixin, View, VerificationEmailMixin):
                 else:
                     messages.error(request, data, extra_tags='danger')
             return HttpResponseRedirect(data if is_success else self.failure_url)
-
-        elif provider == 'google' or provider == 'kakao':
-            self.work(provider)
         else:
             return HttpResponseRedirect(self.failure_url)
 
     def post(self, request, **kwargs):
-        self.oauth_user_id = request.POST.get('id')
-        self.oauth_user_nickName = request.POST.get('nickName')
-        SocialLoginCallbackView.get(self, request, **kwargs)
-        # is_success = request.user.is_authenticated
-        return HttpResponseRedirect(self.success_url if self.is_success else self.failure_url)
+        provider = kwargs.get('provider')
+        self.oauth_user_email = request.POST.get('email')
+        # data = SocialLoginCallbackView.get(self, request, **kwargs)
+        if provider == 'google':
+            data = self.work(request)
+            return HttpResponseRedirect(data)
+        else:
+            return HttpResponseRedirect(self.failure_url)
 
-    def work(self, provider):
+    def work(self, request):
         """
         기존 사용자는 login
         새로 가입하는 사용자는 Temp 테이블에 psv 형태로 저장 & user:profile url로 redirect
         """
+        # 사용자 로그인 or 생성
         try:
-            user = self.model.objects.get(email=self.oauth_user_id + '@social.' + provider)
-            self.is_success = True
-            login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+            # 유저 검색
+            user = self.model.objects.get(email=self.oauth_user_email)
+            print(user.profile)
+            profile = Profile.objects.get(eduser_id=user.id)
+            if not profile.is_google:  # 기존 유저는 있지만 소셜 연동(google)을 하지 않았을 때
+                if profile.confirm:
+                    profile.is_google = True
+                    profile.save()
+                    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                else:
+                    messages.error(request, '같은 이메일로 가입된 정보가 있습니다. '
+                                            '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.')
+                    self.send_verification_email(user)  # email resend
+            else:
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         except ObjectDoesNotExist:  # EdUser 모델이 없을 경우
-            if self.oauth_user_nickName == 'undefiend':
-                self.oauth_user_nickName = self.oauth_user_id
-
             # Temp save
-            data = self.oauth_user_id + '@social.' + provider + '| ' + \
-                                                                'social_password' + '| ' + self.oauth_user_nickName
+            data = self.oauth_user_email + '| ' + 'social_password' + '| ' + 'social_nickname' + '| ' + 'google'
+            print(data)
+
             temp = Temp(eduser=data)
             temp.create_date = timezone.now()
             temp.save()
-            self.is_success = True
-            self.success_url = reverse_lazy('user:profile', kwargs={'pk': temp.id})
+
+            return reverse_lazy('user:profile', kwargs={'pk': temp.id})
+            # return reverse_lazy('user:profile', kwargs={'pk': temp.id})
+
+        return reverse_lazy('school:index')
+
+        # try:
+        #     user = self.model.objects.get(email=self.oauth_user_email)
+        #     self.is_success = True
+        #     login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+        # except ObjectDoesNotExist:  # EdUser 모델이 없을 경우
+        #     if self.oauth_user_nickName == 'undefiend':
+        #         self.oauth_user_nickName = self.oauth_user_id
+
+        #     # Temp save
+        #     data = self.oauth_user_id + '@social.' + provider + '| ' + \
+        #                                                         'social_password' + '| ' + self.oauth_user_nickName
+            # temp = Temp(eduser=data)
+            # temp.create_date = timezone.now()
+            # temp.save()
+            # self.is_success = True
+            # self.success_url = reverse_lazy('user:profile', kwargs={'pk': temp.id})
 
     def set_session(self, **kwargs):
         for key, value in kwargs.items():
