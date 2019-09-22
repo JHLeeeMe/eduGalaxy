@@ -51,7 +51,7 @@
 					  {% if request.user.is_authenticated %}
 						<li><a href="{% url 'user:mypage' %}">myPage</a></li>
 						<li><a href="{% url 'user:logout' %}">Sign Out</a></li>
-						{% if not request.user.user_confirm %}
+						{% if not request.user.profile.confirm %} <!-- oneToOne Field이므로 역참조시 _set불필요 -->
 								</ul>
 				  			</div>
 							<div class="collapse navbar-collapse" id="myNavbar">
