@@ -173,7 +173,6 @@ class SchoolAuthCreateView(FormView):
 class TempUtil:
     def __init__(self, pk):
         self.temp = get_object_or_404(Temp, id=pk)
-        # self.choice = ['_google', '_naver']  # 비밀번호 설정할 때 언더스코어는 불가
         self.provider = None
 
     def get_object(self):
@@ -182,15 +181,11 @@ class TempUtil:
     def eduser_save(self):
         eduser_data = self.temp.eduser.split('| ')
         self.eduser = EdUser(email=eduser_data[0],
-                             password=eduser_data[1],
-                             nickname=eduser_data[2])
+                             password=eduser_data[1])
 
-        if len(eduser_data) > 3:
+        if len(eduser_data) > 2:
             self.eduser.set_password(None)
             self.provider = eduser_data[-1]
-        # if eduser_data[1].endswith(tuple(self.choice)):  # password의 끝글자가 self.choice 중 하나이면 True 반환
-        #     self.eduser.set_password(None)
-        #     self.provider = eduser_data[1][1:]  # 언더스코어를 뺀 str값을 저장 (ex 'naver' or 'google')
 
         self.eduser.save()
         return self.eduser
@@ -218,7 +213,9 @@ class ResultCreateView(TemplateView, VerificationEmailMixin):
 
     def get(self, request, *args, **kwargs):
         eduser = get_object_or_404(EdUser, id=kwargs['pk'])
-        self.send_verification_email(eduser)  # email resend
+
+        if eduser.profile.confirm is False:  # 소셜 회원가입이 아니면 이메일 발송
+            self.send_verification_email(eduser)
 
         return render(request, self.template_name, {'eduser': eduser})
 
@@ -322,9 +319,9 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
         kwargs.update({'group': self.get_group_num()})
         return super().get_context_data(**kwargs)
 
+    # ???
     def get(self, request, *args, **kwargs):
         form = self.get_form()
-        print(form)
         super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -400,14 +397,10 @@ class SocialLoginCallbackView(NaverLoginMixin, View, VerificationEmailMixin):
     failure_url = reverse_lazy('user:login')
     required_profiles = ['email']
     model = get_user_model()
-    oauth_user_id = None
-    oauth_user_nickName = None
     is_success = False
 
     def get(self, request, **kwargs):
-        print('222222222222222222222')
         provider = kwargs.get('provider')
-        # success_url = request.GET.get('next', self.success_url)
 
         if provider == 'naver':
             csrf_token = request.GET.get('state')
@@ -432,7 +425,6 @@ class SocialLoginCallbackView(NaverLoginMixin, View, VerificationEmailMixin):
     def post(self, request, **kwargs):
         provider = kwargs.get('provider')
         self.oauth_user_email = request.POST.get('email')
-        # data = SocialLoginCallbackView.get(self, request, **kwargs)
         if provider == 'google':
             data = self.work(request)
             return HttpResponseRedirect(data)
@@ -463,34 +455,15 @@ class SocialLoginCallbackView(NaverLoginMixin, View, VerificationEmailMixin):
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         except ObjectDoesNotExist:  # EdUser 모델이 없을 경우
             # Temp save
-            data = self.oauth_user_email + '| ' + 'social_password' + '| ' + 'social_nickname' + '| ' + 'google'
-            print(data)
+            data = self.oauth_user_email + '| ' + 'social_password' + '| ' + 'google'
 
             temp = Temp(eduser=data)
             temp.create_date = timezone.now()
             temp.save()
 
             return reverse_lazy('user:profile', kwargs={'pk': temp.id})
-            # return reverse_lazy('user:profile', kwargs={'pk': temp.id})
 
         return reverse_lazy('school:index')
-
-        # try:
-        #     user = self.model.objects.get(email=self.oauth_user_email)
-        #     self.is_success = True
-        #     login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
-        # except ObjectDoesNotExist:  # EdUser 모델이 없을 경우
-        #     if self.oauth_user_nickName == 'undefiend':
-        #         self.oauth_user_nickName = self.oauth_user_id
-
-        #     # Temp save
-        #     data = self.oauth_user_id + '@social.' + provider + '| ' + \
-        #                                                         'social_password' + '| ' + self.oauth_user_nickName
-            # temp = Temp(eduser=data)
-            # temp.create_date = timezone.now()
-            # temp.save()
-            # self.is_success = True
-            # self.success_url = reverse_lazy('user:profile', kwargs={'pk': temp.id})
 
     def set_session(self, **kwargs):
         for key, value in kwargs.items():
