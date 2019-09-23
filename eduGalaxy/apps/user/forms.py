@@ -59,8 +59,6 @@ class EdUserCreationForm(forms.Form):
         widget=forms.PasswordInput,
     )
 
-    nickname = forms.CharField(label='닉네임', widget=forms.TextInput)
-
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
@@ -74,11 +72,10 @@ class EdUserCreationForm(forms.Form):
 
     def save(self, commit=True):
         password = self.cleaned_data.get("password1")
-        nickname = self.cleaned_data.get("nickname")
 
         email = self.make_email()
 
-        eduser = email + "| " + password + "| " + nickname
+        eduser = email + "| " + password
         temp = Temp(eduser=eduser)
 
         if commit:

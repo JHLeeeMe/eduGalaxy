@@ -50,12 +50,6 @@ class EdUser(AbstractBaseUser):
         max_length=50,
         verbose_name='이메일'
     )
-    nickname = models.CharField(
-        unique=True,
-        max_length=50,
-        verbose_name='닉네임',
-        null=False
-    )
     # AbstractBaseUser 를 상속받음으로써 정의해줘야하는 필드
     is_active = models.BooleanField(default=True, verbose_name='활성화 여부')
     is_admin = models.BooleanField(default=False, verbose_name='관리자')
@@ -70,13 +64,13 @@ class EdUser(AbstractBaseUser):
         verbose_name_plural = '사용자'
 
     def get_full_name(self):
-        return self.nickname
+        return self.email
 
     def get_short_name(self):
-        return self.nickname
+        return self.email
 
     def __str__(self):
-        return self.nickname
+        return self.email
 
     # has_perms, has_module_perms 장고 인증 백엔드에서 사용
     # 사용자 특정 권한 여부
