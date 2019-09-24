@@ -1,6 +1,6 @@
 from django import forms
 from django.utils.translation import ugettext as _
-from django.contrib.auth.hashers import check_password
+
 from apps.user.models import EdUser, Temp, SchoolAuth, Log, Profile, Student
 
 
@@ -22,7 +22,7 @@ GROUP_LIST = (
     ("학교 관계자", "학교 관계자")
 )
 
-
+# user 계정 폼
 class EdUserCreationForm(forms.Form):
     email1 = forms.CharField(widget=forms.TextInput(
             attrs={
@@ -61,6 +61,7 @@ class EdUserCreationForm(forms.Form):
 
     nickname = forms.CharField(label='닉네임', widget=forms.TextInput)
 
+    # 폼 유효성 검사
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get('password1')
@@ -71,7 +72,7 @@ class EdUserCreationForm(forms.Form):
         check_email = EdUser.objects.filter(email=email)
         check_nickname = EdUser.objects.filter(nickname=nickname)
 
-        if password1 != password2:
+        if password1 and password2 and password1 != password2:
             raise forms.ValidationError("비밀번호 오류입니다. 다시 입력해주세요")
         if check_email.exists():
             raise forms.ValidationError("해당 이메일은 이미 가입하셨습니다.")
@@ -79,6 +80,7 @@ class EdUserCreationForm(forms.Form):
             raise forms.ValidationError("존재하는 닉네임입니다.")
         return super().clean()
 
+    # cleaned_data temp에 저장
     def save(self, commit=True):
         email = self.make_email()
         password = self.cleaned_data.get("password1")
@@ -92,6 +94,7 @@ class EdUserCreationForm(forms.Form):
 
         return temp
 
+    # 이메일 문자열 조합
     def make_email(self):
         email1 = self.cleaned_data.get("email1")
         email2 = self.cleaned_data.get("email2")
@@ -100,6 +103,7 @@ class EdUserCreationForm(forms.Form):
         return email
 
 
+# user 세부 정보 폼
 class ProfileCreationForm(forms.Form):
     group = forms.CharField(widget=forms.Select(
             choices=GROUP_LIST,
@@ -113,7 +117,7 @@ class ProfileCreationForm(forms.Form):
         required=False,
     )
     # 본인인증 여부는 추후 구현 예정(핸드폰 인증/이메일 인증)
-
+    # phone 필드는 수정이 필요한 부분
     def profile_data(self):
         group = self.cleaned_data.get('group')
         phone = self.cleaned_data.get('phone')
@@ -218,31 +222,24 @@ class PasswordChangeForm(forms.Form):
         widget=forms.PasswordInput,
     )
 
-    def clean_password2(self):
-        password1 = self.cleaned_data.get("new_pwd1")
-        password2 = self.cleaned_data.get("new_pwd2")
+    def clean(self):
+        cleaned_data = super().clean()
 
-        if password1 and password2 and password1 != password2:
-            raise forms.ValidationError("비밀번호가 서로 다릅니다!")
-        return password2
+        old_pwd = cleaned_data.get('old_pwd')
+        new_pwd1 = cleaned_data.get('new_pwd1')
+        new_pwd2 = cleaned_data.get('new_pwd2')
 
-    def compare_password(self, user):
-        old_password = self.cleaned_data.get("old_pwd")
-        new_password = self.cleaned_data.get("new_pwd2")
-
-        if not check_password(old_password, user.password):
-            raise forms.ValidationError("기존 비밀번호가 아닙니다.")
-        if new_password == old_password:
+        if new_pwd2 == old_pwd:
             raise forms.ValidationError("기존 비밀번호와 새로운 비밀번호랑 달라야합니다.")
-        return True
+        if new_pwd1 != new_pwd2:
+            raise forms.ValidationError("비밀번호가 서로 다릅니다!")
 
     def user_update(self, user):
-        if self.compare_password(user):
-            password = self.clean_password2()
-            user.password = password
+        password = self.cleaned_data.get('new_pwd2')
+        user.password = password
 
-            user.set_password(password)
-            user.save()
+        user.set_password(password)
+        user.save()
 
 
 class ProfileUpdateForm(forms.ModelForm):
