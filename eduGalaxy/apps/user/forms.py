@@ -1,6 +1,8 @@
 from django import forms
 from django.utils.translation import ugettext as _
+
 from apps.user.models import EdUser, Temp, SchoolAuth, Log, Profile, Student
+
 
 EMAIL_LIST = (
     ("select", "선택하세요"),
@@ -220,24 +222,20 @@ class PasswordChangeForm(forms.Form):
         widget=forms.PasswordInput,
     )
 
-    def clean_new_pwd2(self):
-        new_pwd1 = self.cleaned_data.get("new_pwd1")
-        new_pwd2 = self.cleaned_data.get("new_pwd2")
+    def clean(self):
+        cleaned_data = super().clean()
 
+        old_pwd = cleaned_data.get('old_pwd')
+        new_pwd1 = cleaned_data.get('new_pwd1')
+        new_pwd2 = cleaned_data.get('new_pwd2')
+
+        if new_pwd2 == old_pwd:
+            raise forms.ValidationError("기존 비밀번호와 새로운 비밀번호랑 달라야합니다.")
         if new_pwd1 != new_pwd2:
             raise forms.ValidationError("비밀번호가 서로 다릅니다!")
 
-        return new_pwd2
-
-    def clean_old_pwd(self):
-        old_pwd = self.cleaned_data.get("old_pwd")
-        new_pwd = self.clean_new_pwd2()
-
-        if new_pwd == old_pwd:
-            raise forms.ValidationError("기존 비밀번호와 새로운 비밀번호랑 달라야합니다.")
-
     def user_update(self, user):
-        password = self.clean_new_pwd2()
+        password = self.cleaned_data.get('new_pwd2')
         user.password = password
 
         user.set_password(password)

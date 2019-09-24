@@ -4,14 +4,11 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.edit import FormView, View, UpdateView
 from django.views.generic.base import TemplateView, RedirectView
 
-from django.contrib.auth.hashers import check_password
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model, login
 from django.contrib import messages
 from django.utils import timezone
-
-from django.forms import ValidationError
 
 # social auth
 from .oauth.providers.naver import NaverLoginMixin
@@ -212,13 +209,15 @@ class PasswordChangeView(FormView, LoginRequiredMixin):
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        user = self.get_object()
-        new_password = request.POST.get('new_pwd2')
+        form = self.get_form()
+        old_pwd = request.POST.get('old_pwd')
+        if not request.user.check_password(old_pwd):
+            form.add_error(None, "기존 비밀번호를 잘못 입력하셨습니다.")
 
-        if not check_password(new_password, user.password):
-            raise ValidationError("기존 비밀번호를 잘못 입력하셨습니다")
-
-        return super().post(request, *args, **kwargs)
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
 
     def form_valid(self, form):
         user = self.get_object()
@@ -254,6 +253,7 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
         return super().get_initial()
 
     def get_group_num(self):
+        global num
         profile = self.get_object(queryset=None)
         if profile.group == "학생":
             num = 0
