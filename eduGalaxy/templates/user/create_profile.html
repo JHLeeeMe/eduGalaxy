@@ -14,9 +14,6 @@
             <div class="panel-heading">
                 <h1 align="center">세부 내용 입력</h1>
             </div>
-            {% if error_message %}
-            <p><strong>{{ error_message }}</strong></p>
-            {% endif %}
             <div class="panel-body">
                 <form name="Profile_Form" action="." method="post"> {% csrf_token %}
                 <table>

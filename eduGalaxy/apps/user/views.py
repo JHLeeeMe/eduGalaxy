@@ -3,7 +3,6 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.edit import FormView, View, UpdateView
 from django.views.generic.base import TemplateView, RedirectView
-from django.core.files.storage import FileSystemStorage
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
@@ -25,6 +24,7 @@ import os
 
 
 # 회원가입
+# 사용자 계정 뷰
 class EdUserCreateView(FormView):
     form_class = EdUserCreationForm
     template_name = 'user/create_user.html'
@@ -34,14 +34,6 @@ class EdUserCreateView(FormView):
         context = {'form': form}
         return render(request, self.template_name, context)
 
-    def post(self, request, *args, **kwargs):
-        form = self.form_class(request.POST)
-
-        if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
-
     def form_valid(self, form):
         temp = form.save(commit=False)
         temp.create_date = timezone.now()
@@ -49,10 +41,8 @@ class EdUserCreateView(FormView):
         eduser_id = temp.id
         return HttpResponseRedirect(reverse_lazy('user:profile', kwargs={'pk': eduser_id}))
 
-    def form_invalid(self, form):
-        return self.render_to_response(self.get_context_data(form=form))
 
-
+# 사용자 계정 세부내용
 class ProfileCreateView(FormView):
     form_class = ProfileCreationForm
     template_name = 'user/create_profile.html'
@@ -64,38 +54,25 @@ class ProfileCreateView(FormView):
     def get(self, request, *args, **kwargs):
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
 
-    def post(self, request, *args, **kwargs):
-        form = self.get_form()
-        if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
-
     def form_valid(self, form):
         temp = self.get_object()
-        if 'next' in self.request.POST:
-            data = form.profile_data()
-            group = self.request.POST['group']
-            pk = temp.id
+        data = form.profile_data()
+        group = self.request.POST['group']
+        pk = temp.id
 
-            if group == "학생":
-                nexturl = 'user:student'
-            elif group == "학교 관계자":
-                nexturl = 'user:school_auth'
-            else:
-                return render(self.request, self.template_name, {
-                    'error_message': "직업을 선택해주세요",
-                })
-            temp.profile = data
-            temp.create_date = timezone.now()
-            temp.save()
+        if group == "학생":
+            nexturl = 'user:student'
+        elif group == "학교 관계자":
+            nexturl = 'user:school_auth'
 
-            return HttpResponseRedirect(reverse_lazy(nexturl, kwargs={'pk': pk}))
+        temp.profile = data
+        temp.create_date = timezone.now()
+        temp.save()
 
-    def form_invalid(self, form):
-        return self.render_to_response(self.get_context_data(form=form))
+        return HttpResponseRedirect(reverse_lazy(nexturl, kwargs={'pk': pk}))
 
 
+# 사용자 - 학생 정보 입력
 class StudentCreateView(FormView):
     form_class = StudentCreationForm
     template_name = "user/create_student.html"
@@ -131,10 +108,8 @@ class StudentCreateView(FormView):
 
         return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
 
-    def form_invalid(self, form):
-        return self.render_to_response(self.get_context_data(form=form))
 
-
+# 사용자 - 학교 관계자 정보
 class SchoolAuthCreateView(FormView):
     form_class = SchoolAuthCreationForm
     template_name = "user/create_school_auth.html"
@@ -142,13 +117,6 @@ class SchoolAuthCreateView(FormView):
 
     def get(self, request, *args, **kwargs):
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
-
-    def post(self, request, *args, **kwargs):
-        form = self.get_form()
-        if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
 
     def form_valid(self, form):
         temp = TempUtil(self.kwargs['pk'])
@@ -170,6 +138,7 @@ class SchoolAuthCreateView(FormView):
         return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
 
 
+# temp 데이터 관련 class
 class TempUtil:
     def __init__(self, pk):
         self.temp = get_object_or_404(Temp, id=pk)
@@ -244,14 +213,18 @@ class PasswordChangeView(FormView, LoginRequiredMixin):
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
+        old_pwd = request.POST.get('old_pwd')
+        if not request.user.check_password(old_pwd):
+            form.add_error(None, "기존 비밀번호를 잘못 입력하셨습니다.")
+
         if form.is_valid():
             return self.form_valid(form)
         else:
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        eduser = self.get_object()
-        form.user_update(eduser)
+        user = self.get_object()
+        form.user_update(user)
         return HttpResponseRedirect(self.get_success_url())
 
 
@@ -283,6 +256,7 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
         return super().get_initial()
 
     def get_group_num(self):
+        global num
         profile = self.get_object(queryset=None)
         if profile.group == "학생":
             num = 0
