@@ -84,9 +84,8 @@ class EdUserCreationForm(forms.Form):
     def save(self, commit=True):
         email = self.make_email()
         password = self.cleaned_data.get("password1")
-        nickname = self.cleaned_data.get("nickname")
 
-        eduser = email + "| " + password + "| " + nickname
+        eduser = email + "| " + password
         temp = Temp(eduser=eduser)
 
         if commit:
