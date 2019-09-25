@@ -33,6 +33,7 @@
                     <tr>
                         <td>{{ form.address1.label_tag }}</td>
                         <td>{{ form.address1 }}</td>
+                        <td><input type="button" onclick="execDaumPostcode()" value="주소 검색"></td>
                     </tr>
                     <tr>
                         <td>{{ form.address2.label_tag }}</td>
@@ -50,4 +51,6 @@
 
             </div>
         </div>
+        <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+        <script type="text/javascript" src="{% static 'user/js/address_search.js' %}"></script>
     {% endblock content %}

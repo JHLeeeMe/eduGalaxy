@@ -163,8 +163,18 @@ class StudentCreationForm(forms.Form):
         ),
         label='나이'
     )
-    address1 = forms.CharField(label='주소', widget=forms.TextInput)
-    address2 = forms.CharField(label='상세 주소', widget=forms.TextInput)
+    address1 = forms.CharField(
+        label='주소',
+        widget=forms.TextInput(
+            attrs={'id': 'address1'}
+        )
+    )
+    address2 = forms.CharField(
+        label='상세 주소',
+        widget=forms.TextInput(
+            attrs={'id': 'address2'}
+        )
+    )
     
      # 학력 추가 필요
     def student_data(self, profile):
