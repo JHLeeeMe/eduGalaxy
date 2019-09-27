@@ -149,8 +149,8 @@ class TempUtil:
 
     def eduser_save(self):
         eduser_data = self.temp.eduser.split('| ')
-        self.eduser = EdUser(email=eduser_data[0],
-                             password=eduser_data[1])
+        self.eduser = EdUser(email=eduser_data[0])
+        self.eduser.set_password(eduser_data[1])
 
         if len(eduser_data) > 2:
             self.eduser.set_password(None)
