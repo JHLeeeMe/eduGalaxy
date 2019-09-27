@@ -3,7 +3,6 @@ from django.contrib.auth import login
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from django.urls import reverse_lazy
-from django.http import HttpResponseRedirect
 
 from apps.user.models import Temp, Profile
 import requests
@@ -36,20 +35,6 @@ class NaverClient:
         if not res.get('resultcode') == '00':
             return False, res.get('message')
         else:
-            # {
-            #   "resultcode": "00",
-            #   "message": "success",
-            #   "response": {
-            #     "email": "openapi@naver.com",
-            #     "nickname": "OpenAPI",
-            #     "profile_image": "https://ssl.pstatic.net/static/pwe/address/nodata_33x33.gif",
-            #     "age": "40-49",
-            #     "gender": "F",
-            #     "id": "32742776",
-            #     "name": "오픈 API",
-            #     "birthday": "10-01"
-            #   }
-            # }
             return True, res.get('response')
 
 
@@ -98,7 +83,7 @@ class NaverLoginMixin:
                 login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
         except ObjectDoesNotExist:  # EdUser 모델이 없을 경우
             # Temp save
-            data = profiles.get('email') + '| ' + 'social_password' + '| ' + 'social_nickname' + '| ' + 'naver'
+            data = profiles.get('email') + '| ' + 'social_password' + '| ' + 'naver'
 
             temp = Temp(eduser=data)
             temp.create_date = timezone.now()
