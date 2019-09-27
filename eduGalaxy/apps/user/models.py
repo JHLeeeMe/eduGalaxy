@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 
 
 class EdUserManager(BaseUserManager):
-    def create_user(self, email, nickname, password=None):
+    def create_user(self, email, password=None):
 
         # 주어진 이메일, 닉네임, 비밀번호 등 개인정보로 User 인스턴스 생성
 
@@ -16,7 +16,6 @@ class EdUserManager(BaseUserManager):
 
             user = self.model(
                 email=self.normalize_email(email),
-                nickname=nickname,
             )
             user.set_password(password)
             user.save(using=self._db)
@@ -24,7 +23,7 @@ class EdUserManager(BaseUserManager):
         except:
             raise ValidationError({'적절한 이메일을 입력하세요'})
 
-    def create_superuser(self, email, nickname, password):
+    def create_superuser(self, email, password):
 
         # 주어진 이메일, 닉네임, 비밀번호 등 개인정보로 User 인스턴스 생성
         # 단, 최상위 사용자이므로 권한을 부여한다.
@@ -33,7 +32,6 @@ class EdUserManager(BaseUserManager):
             superuser = self.create_user(
                 email=email,
                 password=password,
-                nickname=nickname,
             )
             superuser.is_admin = True
             superuser.save(using=self._db)
@@ -57,7 +55,6 @@ class EdUser(AbstractBaseUser):
     objects = EdUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['nickname']
 
     class Meta:
         verbose_name = '사용자'

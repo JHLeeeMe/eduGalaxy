@@ -69,7 +69,7 @@ function init() {
             client_id: '442447136305-6l8ogrdbvnr20m29kh2claiejbpm94sa.apps.googleusercontent.com',
 //            ux_mode: 'redirect',
             redirect_uri: 'http://localhost:8000/user/login/social/google/callback',
-            fetch_basic_profile: false,
+            fetch_basic_profile: true,
             scope: 'profile'
         })
     gauth.then(function() {
@@ -85,7 +85,7 @@ function googleLogin() {
     window.provider = 'google'
     gauth.signIn().then(function() {
         checkLoginStatus();
-        if (profile.getId()!= null) {
+        if (profile.getEmail()!= null) {
             post_to_url();
         } else {
             alert('login failed')
@@ -102,9 +102,6 @@ function post_to_url() {
         inputHiddenForm();
         form.setAttribute("action", location.origin + '/user/login/social/google/callback/' + location.search);
         hiddenFieldForEmail.setAttribute("value", profile.getEmail());
-//        hiddenFieldForID.setAttribute("value", profile.getId());
-//        hiddenFieldForNickName.setAttribute("value", profile.getName());
-
 //    } else if (provider == 'kakao') {
 //        inputHiddenForm();
 //        form.setAttribute("action", location.origin + '/user/login/social/kakao/callback/' + location.search);
@@ -114,8 +111,6 @@ function post_to_url() {
         console.log('provider is null')
     }
     form.appendChild(hiddenFieldForEmail);
-//    form.appendChild(hiddenFieldForID);
-//    form.appendChild(hiddenFieldForNickName);
     form.appendChild(hiddenFieldForCsrf);
     document.body.appendChild(form);
     form.submit();
@@ -129,14 +124,6 @@ function post_to_url() {
         window.hiddenFieldForEmail = document.createElement("input");
         hiddenFieldForEmail.setAttribute("name", 'email');
         hiddenFieldForEmail.setAttribute("type", "hidden");
-
-//        window.hiddenFieldForID = document.createElement("input");
-//        hiddenFieldForID.setAttribute("name", 'id');
-//        hiddenFieldForID.setAttribute("type", "hidden");
-
-//        window.hiddenFieldForNickName = document.createElement("input");
-//        hiddenFieldForNickName.setAttribute("name", 'nickName');
-//        hiddenFieldForNickName.setAttribute("type", "hidden");
 
         window.hiddenFieldForCsrf = document.createElement("input");
         hiddenFieldForCsrf.setAttribute("type", "hidden");
