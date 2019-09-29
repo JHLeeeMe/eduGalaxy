@@ -27,15 +27,15 @@ class EdUserCreationForm(forms.Form):
     email1 = forms.CharField(widget=forms.TextInput(
             attrs={
                 'autofocus': 'autofocus',
-                'required': 'required'}
-        ),
+                'required': 'required',}
+            ),
         label='이메일'
     )
 
     email2 = forms.CharField(widget=forms.TextInput(
             attrs={
                 'id': 'user_email2',
-                'disabled': 'disabled'}
+                'disabled': 'disabled',}
         )
     )
 
@@ -56,51 +56,41 @@ class EdUserCreationForm(forms.Form):
     password2 = forms.CharField(
         label=_("비밀번호 확인"),
         strip=False,
-        widget=forms.PasswordInput,
+        widget=forms.PasswordInput
     )
-
-    nickname = forms.CharField(label='닉네임', widget=forms.TextInput)
 
     # 폼 유효성 검사
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get('password1')
         password2 = cleaned_data.get('password2')
-        nickname = cleaned_data.get('nickname')
-        email = self.make_email()
+
+        email = cleaned_data['email1'] + "@" + cleaned_data['email2']
 
         check_email = EdUser.objects.filter(email=email)
-        check_nickname = EdUser.objects.filter(nickname=nickname)
 
         if password1 and password2 and password1 != password2:
             raise forms.ValidationError("비밀번호 오류입니다. 다시 입력해주세요")
         if check_email.exists():
             raise forms.ValidationError("해당 이메일은 이미 가입하셨습니다.")
-        if check_nickname.exists():
-            raise forms.ValidationError("존재하는 닉네임입니다.")
+
         return super().clean()
 
     # cleaned_data temp에 저장
     def save(self, commit=True):
-        email = self.make_email()
+        email1 = self.cleaned_data.get('email1')
+        email2 = self.cleaned_data.get('email2')
         password = self.cleaned_data.get("password1")
-        nickname = self.cleaned_data.get("nickname")
 
-        eduser = email + "| " + password + "| " + nickname
+        email = email1 + "@" + email2
+
+        eduser = email + "| " + password
         temp = Temp(eduser=eduser)
 
         if commit:
             temp.save()
 
         return temp
-
-    # 이메일 문자열 조합
-    def make_email(self):
-        email1 = self.cleaned_data.get("email1")
-        email2 = self.cleaned_data.get("email2")
-        email = email1 + "@" + email2
-
-        return email
 
 
 # user 세부 정보 폼
@@ -163,8 +153,18 @@ class StudentCreationForm(forms.Form):
         ),
         label='나이'
     )
-    address1 = forms.CharField(label='주소', widget=forms.TextInput)
-    address2 = forms.CharField(label='상세 주소', widget=forms.TextInput)
+    address1 = forms.CharField(
+        label='주소',
+        widget=forms.TextInput(
+            attrs={'id': 'address1'}
+        )
+    )
+    address2 = forms.CharField(
+        label='상세 주소',
+        widget=forms.TextInput(
+            attrs={'id': 'address2'}
+        )
+    )
     
      # 학력 추가 필요
     def student_data(self, profile):

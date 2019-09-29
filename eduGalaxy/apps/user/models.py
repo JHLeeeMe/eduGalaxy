@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 
 
 class EdUserManager(BaseUserManager):
-    def create_user(self, email, nickname, password=None):
+    def create_user(self, email, password=None):
 
         # 주어진 이메일, 닉네임, 비밀번호 등 개인정보로 User 인스턴스 생성
 
@@ -16,7 +16,6 @@ class EdUserManager(BaseUserManager):
 
             user = self.model(
                 email=self.normalize_email(email),
-                nickname=nickname,
             )
             user.set_password(password)
             user.save(using=self._db)
@@ -24,7 +23,7 @@ class EdUserManager(BaseUserManager):
         except:
             raise ValidationError({'적절한 이메일을 입력하세요'})
 
-    def create_superuser(self, email, nickname, password):
+    def create_superuser(self, email, password):
 
         # 주어진 이메일, 닉네임, 비밀번호 등 개인정보로 User 인스턴스 생성
         # 단, 최상위 사용자이므로 권한을 부여한다.
@@ -33,7 +32,6 @@ class EdUserManager(BaseUserManager):
             superuser = self.create_user(
                 email=email,
                 password=password,
-                nickname=nickname,
             )
             superuser.is_admin = True
             superuser.save(using=self._db)
@@ -50,12 +48,6 @@ class EdUser(AbstractBaseUser):
         max_length=50,
         verbose_name='이메일'
     )
-    nickname = models.CharField(
-        unique=True,
-        max_length=50,
-        verbose_name='닉네임',
-        null=False
-    )
     # AbstractBaseUser 를 상속받음으로써 정의해줘야하는 필드
     is_active = models.BooleanField(default=True, verbose_name='활성화 여부')
     is_admin = models.BooleanField(default=False, verbose_name='관리자')
@@ -63,20 +55,19 @@ class EdUser(AbstractBaseUser):
     objects = EdUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['nickname']
 
     class Meta:
         verbose_name = '사용자'
         verbose_name_plural = '사용자'
 
     def get_full_name(self):
-        return self.nickname
+        return self.email
 
     def get_short_name(self):
-        return self.nickname
+        return self.email
 
     def __str__(self):
-        return self.nickname
+        return self.email
 
     # has_perms, has_module_perms 장고 인증 백엔드에서 사용
     # 사용자 특정 권한 여부
@@ -104,11 +95,15 @@ class Profile(models.Model):
     group = models.CharField(max_length=30, verbose_name='직업')
     phone = models.CharField(max_length=15, verbose_name='핸드폰 번호')
     receive_email = models.BooleanField(default=False, verbose_name='이메일 수신 여부')
+    is_naver = models.BooleanField(default=False, verbose_name='네이버 연동 여부')
+    is_google = models.BooleanField(default=False, verbose_name='구글 연동 여부')
     confirm = models.BooleanField(default=False, verbose_name='본인인증 여부')
 
     class Meta:
         verbose_name = '사용자 프로필'
         verbose_name_plural = '사용자 프로필'
+
+    objects = EdUserManager()
 
 
 # 학교 관계자 테이블

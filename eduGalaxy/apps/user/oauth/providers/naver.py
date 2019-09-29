@@ -1,6 +1,10 @@
 from django.conf import settings
 from django.contrib.auth import login
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
+from django.urls import reverse_lazy
 
+from apps.user.models import Temp, Profile
 import requests
 
 
@@ -37,9 +41,9 @@ class NaverClient:
 class NaverLoginMixin:
     naver_client = NaverClient()
 
-    def login_with_naver(self, state, code):
+    def login_or_create_with_naver(self, state, code):
         
-        # 인증토근 발급
+        # 인증토큰 발급
         is_success, token_infos = self.naver_client.get_access_token(state, code)
 
         if not is_success:
@@ -55,22 +59,39 @@ class NaverLoginMixin:
         if not is_success:
             return False, profiles
 
-        # 사용자 생성 또는 업데이트
-        user, created = self.model.objects.get_or_create(user_email=profiles.get('id') + '@naver.comm')
-        if created:  # 사용자 생성할 경우
-            user.set_password(None)
-            user.user_nickname = profiles.get('id')
-            user.user_gender = profiles.get('gender')
-            user.user_confirm = True
-            user.save()
-
-        # 로그인
-        login(self.request, user, backend='user.oauth.backends.NaverBackend')
-
         # 세션데이터 추가
-        self.set_session(access_token=access_token, refresh_token=refresh_token, expires_in=expires_in, token_type=token_type)
+        self.set_session(access_token=access_token, refresh_token=refresh_token,
+                         expires_in=expires_in, token_type=token_type)
 
-        return True, user
+        # 사용자 로그인 or 생성
+        try:
+            # 유저 검색
+            user = self.model.objects.get(email=profiles.get('email'))
+            profile = Profile.objects.get(eduser_id=user.id)
+            if not profile.is_naver:  # 기존 유저는 있지만 소셜 연동(naver)을 하지 않았을 때
+                if profile.confirm:
+                    profile.is_naver = True
+                    profile.save()
+                    login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+                else:
+                    data = ['같은 이메일로 가입된 정보가 있습니다. 본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.']
+                    data.append(reverse_lazy('school:index'))
+                    data.append(user)
+                    data.append(profile)
+                    return False, data
+            else:
+                login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+        except ObjectDoesNotExist:  # EdUser 모델이 없을 경우
+            # Temp save
+            data = profiles.get('email') + '| ' + 'social_password' + '| ' + 'naver'
+
+            temp = Temp(eduser=data)
+            temp.create_date = timezone.now()
+            temp.save()
+
+            return True, reverse_lazy('user:profile', kwargs={'pk': temp.id})
+
+        return True, reverse_lazy('school:index')
 
     def get_naver_profile(self, access_token, token_type):
         is_success, profiles = self.naver_client.get_profile(access_token, token_type)
