@@ -16,9 +16,9 @@ from django.middleware.csrf import _compare_salted_tokens
 from django.core.exceptions import ObjectDoesNotExist
 
 from .mixins import VerificationEmailMixin
-from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm, PasswordChangeForm
-from apps.user.forms import ProfileUpdateForm
-from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth
+from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm
+from apps.user.forms import ProfileUpdateForm, PasswordChangeForm
+from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth, EduLevel
 
 import os
 
@@ -90,7 +90,6 @@ class StudentCreateView(FormView):
 
     def form_valid(self, form):
         temp = TempUtil(self.kwargs['pk'])
-        temp_object = temp.get_object()
 
         # EdUer save
         eduser = temp.eduser_save()
@@ -103,7 +102,28 @@ class StudentCreateView(FormView):
         student.gender = self.request.POST.get('gender')  # gender값은 StudentCreationForm에 없고, html에서 넘어옴 for radio btn
         student.save()
 
+        # EduLevel save
+        edulevel = EduLevel(school=student.school,
+                            status='재학중',
+                            student_id=student.pk,
+                            modified_cnt=0)
+        edulevel.save()
+        # 졸업한 학교가 있을 때
+        graduated_school_list = self.request.POST.getlist('graduated_school')
+        graduated_school_list.remove('')
+        graduated_school_list = list(set(graduated_school_list))
+        if student.school in graduated_school_list:
+            graduated_school_list.remove(student.school)
+        if graduated_school_list:
+            for school in graduated_school_list:
+                edulevel = EduLevel(school=school,
+                                    status='졸업',
+                                    student_id=student.pk,
+                                    modified_cnt=0)
+                edulevel.save()
+
         # Temp delete
+        temp_object = temp.get_object()
         temp_object.delete()
 
         return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
@@ -128,8 +148,8 @@ class SchoolAuthCreateView(FormView):
         profile = temp.profile_save()
 
         # SchoolAuth save
-        school = form.school_auth_data(profile)
-        school.save()
+        school_auth = form.school_auth_data(profile)
+        school_auth.save()
 
         # Temp delete
         temp_object = temp.get_object()
@@ -149,8 +169,8 @@ class TempUtil:
 
     def eduser_save(self):
         eduser_data = self.temp.eduser.split('| ')
-        self.eduser = EdUser(email=eduser_data[0],
-                             password=eduser_data[1])
+        self.eduser = EdUser(email=eduser_data[0])
+        self.eduser.set_password(eduser_data[1])
 
         if len(eduser_data) > 2:
             self.eduser.set_password(None)

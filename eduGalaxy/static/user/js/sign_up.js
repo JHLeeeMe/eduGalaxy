@@ -24,3 +24,13 @@ function Change_Email(){
 // document.getElementById(아이디) : 해당 아이디의 요소를 선택함.
 // options[아이디.selectedIndex].text : select 박스 옵션에 맞는 텍스트
 // options[아이디.selectedIndex].value : 옵션에 맞는 값
+
+function addField() {
+    var items = document.createElement('p');
+    items.innerHTML = document.getElementById('p_graduation').innerHTML;
+    document.getElementById('div_graduation').appendChild(items);
+}
+
+function removeField(obj) {
+    document.getElementById('div_graduation').removeChild(obj.parentNode);
+}

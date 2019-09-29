@@ -59,25 +59,19 @@ class EdUserCreationForm(forms.Form):
         widget=forms.PasswordInput,
     )
 
-    nickname = forms.CharField(label='닉네임', widget=forms.TextInput)
-
     # 폼 유효성 검사
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get('password1')
         password2 = cleaned_data.get('password2')
-        nickname = cleaned_data.get('nickname')
         email = self.make_email()
 
         check_email = EdUser.objects.filter(email=email)
-        check_nickname = EdUser.objects.filter(nickname=nickname)
 
         if password1 and password2 and password1 != password2:
             raise forms.ValidationError("비밀번호 오류입니다. 다시 입력해주세요")
         if check_email.exists():
             raise forms.ValidationError("해당 이메일은 이미 가입하셨습니다.")
-        if check_nickname.exists():
-            raise forms.ValidationError("존재하는 닉네임입니다.")
         return super().clean()
 
     # cleaned_data temp에 저장

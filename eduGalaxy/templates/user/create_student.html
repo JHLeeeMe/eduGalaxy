@@ -12,43 +12,45 @@
         </div>
         <div class="panel-body">
             <form name="student_form" action="." method="post"> {% csrf_token %}
-            <table>
-                <tr>
-                    <td>{{ form.school.label_tag }}</td>
-                    <td>{{ form.school }}</td>
-                </tr>
-                <tr>
-                    <td>{{ form.grade.label_tag }}</td>
-                    <td>{{ form.grade }}</td>
-                </tr>
-                <tr>
-                    <td>{{ form.age.label_tag }}</td>
-                    <td>{{ form.age }}</td>
-                </tr>
-                <tr>
-                    <td><h5>성별:</h5></td>
-                    <td><label><input type="radio" name="gender" value="M" checked='checked'>남</label></td>
-                    <td><label><input type="radio" name="gender" value="F">여</label></td>
-                </tr>
-                <tr>
-                    <td>{{ form.address1.label_tag }}</td>
-                    <td>{{ form.address1 }}</td>
-                </tr>
-                <tr>
-                    <td>{{ form.address2.label_tag }}</td>
-                    <td>{{ form.address2 }}</td>
-                </tr>
-            </table>
+                <div>
+                    <p>  <!-- 학교 & 학년-->
+                        {{ form.school.label_tag }} {{ form.school }}
+                        {{ form.grade.label_tag }} {{ form.grade }}
+                    </p>
+                    <div id="div_graduation">
+                        <h5>졸업한 학교 <i class='fas fa-plus' onclick='addField()'></i></h5>
+                        <p id="p_graduation" style="display:none">
+                            <input type='text' name='graduated_school'>
+                            <i class='fas fa-minus' onclick='removeField(this)'></i>
+                        </p>
+                    </div>
+                    <p>
+                        {{ form.age.label_tag }} {{ form.age }}
+                    </p>
+                    <p>
+                        성별:
+                        <label><input type="radio" name="gender" value="M" checked='checked'>남</label>
+                        <label><input type="radio" name="gender" value="F">여</label>
+                    </p>
+                    <p>
+                        {{ form.address1.label_tag }}
+                        {{ form.address1 }}
+                    </p>
+                    <p>
+                        {{ form.address2.label_tag }}
+                        {{ form.address2 }}
+                    </p>
+                </div>
                 <div class="form-actions">
                     <button class="btn btn-primary" name="next" type="submit">다음</button>
                     <a href="{% url 'user:temp_delete' pk=pk %}">
                         <button type='button' class="btn btn-danger" name="cancel">취소</button>
                     </a>
                 </div>
-
             </form>
 
         </div>
     </div>
+    <script src="{% static 'user/js/sign_up.js' %}" type="text/javascript"></script>
 {% endblock content %}
 
