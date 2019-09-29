@@ -14,7 +14,7 @@ class EdUserCreationForm(forms.ModelForm):
 
     class Meta:
         model = EdUser
-        fields = ('email', 'nickname')
+        fields = ('email',)
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
@@ -39,7 +39,7 @@ class EdUserChangeForm(forms.ModelForm):
 
     class Meta:
         model = EdUser
-        fields = ('email', 'password', 'nickname', 'is_active', 'is_admin')
+        fields = ('email', 'password', 'is_active', 'is_admin')
 
     def clean_password(self):
         return self.initial['password']
@@ -52,7 +52,6 @@ class EdUserAdmin(BaseUserAdmin):
     list_display =(
         'id',
         'email',
-        'nickname',
         'is_active',
         'is_admin')
     list_filter = ('is_admin', 'is_active')
@@ -60,14 +59,14 @@ class EdUserAdmin(BaseUserAdmin):
     list_display_links = ('email', )
     ordering = ('id', )
     fieldsets = (
-        (None, {'fields': ('email', 'nickname')}),
+        (None, {'fields': ('email',)}),
         ('계정 관리', {'fields': ('is_admin', 'is_active')}),
     )
 
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'nickname', 'password1', 'password2')}
+            'fields': ('email', 'password1', 'password2')}
          ),
     )
 

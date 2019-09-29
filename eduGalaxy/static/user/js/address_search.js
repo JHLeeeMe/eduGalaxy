@@ -1,4 +1,4 @@
-function execDaumPostcode() {
+function address_search() {
     new daum.Postcode({
         oncomplete: function(data) {
             var addr = ''; // 주소 변수
