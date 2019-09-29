@@ -41,6 +41,17 @@ class EdUserCreateView(FormView):
         eduser_id = temp.id
         return HttpResponseRedirect(reverse_lazy('user:profile', kwargs={'pk': eduser_id}))
 
+    # validation error 시 필드값 초기화 및 에러 메시지 호출
+    def form_invalid(self, form):
+        # non_field_error() : error 메시지만 리턴
+        error_data = form.non_field_errors()
+        form = self.form_class(initial=self.initial)
+        context = {
+            'form': form,
+            'error_msg': error_data
+        }
+        return render(self.request, self.template_name, context)
+
 
 # 사용자 계정 세부내용
 class ProfileCreateView(FormView):
@@ -81,13 +92,6 @@ class StudentCreateView(FormView):
     def get(self, request, *args, **kwargs):
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
 
-    def post(self, request, *args, **kwargs):
-        form = self.get_form()
-        if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
-
     def form_valid(self, form):
         temp = TempUtil(self.kwargs['pk'])
 
@@ -108,6 +112,7 @@ class StudentCreateView(FormView):
                             student_id=student.pk,
                             modified_cnt=0)
         edulevel.save()
+
         # 졸업한 학교가 있을 때
         graduated_school_list = self.request.POST.getlist('graduated_school')
         graduated_school_list.remove('')
@@ -224,8 +229,7 @@ class EdUserMypageView(TemplateView, LoginRequiredMixin):
     def get(self, request, *args, **kwargs):
         email = self.request.user.get_username()
         eduser = EdUser.objects.get(email=email)
-        pk = eduser.id
-        kwargs.update({'pk': pk})
+        kwargs.update({'pk': eduser.id})
         return super().get(request, *args, **kwargs)
 
 
@@ -260,6 +264,7 @@ class PasswordChangeView(FormView, LoginRequiredMixin):
         return HttpResponseRedirect(self.get_success_url())
 
 
+# 프로필 수정
 class ProfileUpdateView(UpdateView, LoginRequiredMixin):
     model = Profile
     context_object_name = 'profile'
@@ -312,11 +317,6 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
     def get_context_data(self, **kwargs):
         kwargs.update({'group': self.get_group_num()})
         return super().get_context_data(**kwargs)
-
-    # ???
-    def get(self, request, *args, **kwargs):
-        form = self.get_form()
-        super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
         group = self.get_group_num()
