@@ -64,6 +64,7 @@ class EdUserCreationForm(forms.Form):
         cleaned_data = super().clean()
         password1 = cleaned_data.get('password1')
         password2 = cleaned_data.get('password2')
+
         email = cleaned_data['email1'] + "@" + cleaned_data['email2']
 
         check_email = EdUser.objects.filter(email=email)
@@ -90,7 +91,6 @@ class EdUserCreationForm(forms.Form):
             temp.save()
 
         return temp
-
 
 
 # user 세부 정보 폼
