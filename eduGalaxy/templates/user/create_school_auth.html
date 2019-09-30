@@ -19,12 +19,12 @@
                     <table>
                         {{ form.as_p }}
                     </table>
-                    <div class="form-actions">
-                        <button class="btn btn-primary" name="next" type="submit">다음</button>
-                        <a href="{% url 'user:temp_delete' pk=pk %}">
-                            <button type='button' class="btn btn-danger" name="cancel">취소</button>
-                        </a>
-                    </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" name="next" type="submit">다음</button>
+                    <a href="{% url 'user:temp_delete' pk=pk %}">
+                        <button type='button' class="btn btn-danger" name="cancel">취소</button>
+                    </a>
+                </div>
                 </form>
             </div>
         </div>

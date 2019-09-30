@@ -1,7 +1,7 @@
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic.edit import FormView, View, UpdateView
+from django.views.generic.edit import FormView, View, UpdateView, CreateView
 from django.views.generic.base import TemplateView, RedirectView
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,15 +10,17 @@ from django.contrib.auth import get_user_model, login
 from django.contrib import messages
 from django.utils import timezone
 
+from django.forms.formsets import formset_factory
+
 # social auth
 from .oauth.providers.naver import NaverLoginMixin
 from django.middleware.csrf import _compare_salted_tokens
 from django.core.exceptions import ObjectDoesNotExist
 
 from .mixins import VerificationEmailMixin
-from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm
-from apps.user.forms import ProfileUpdateForm, PasswordChangeForm
+from apps.user.forms import *
 from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth, EduLevel
+from apps.user.models import Parent, Child
 
 import os
 
@@ -75,6 +77,8 @@ class ProfileCreateView(FormView):
             nexturl = 'user:student'
         elif group == "학교 관계자":
             nexturl = 'user:school_auth'
+        elif group == "학부모":
+            return HttpResponseRedirect(reverse_lazy('user:parent', kwargs={'pk': pk, 'extra': 2}))
 
         temp.profile = data
         temp.create_date = timezone.now()
@@ -134,6 +138,31 @@ class StudentCreateView(FormView):
         return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
 
 
+class ParentCreateView(CreateView):
+    model = Parent
+    form_class = ParentCreationForm
+    template_name = "user/create_parent.html"
+    success_url = 'user:result'
+
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        ChildCreationFormSet = formset_factory(ChildCreationForm, extra=kwargs['extra'])
+        formset = ChildCreationFormSet()
+
+        num_list = []
+        number = range(1, 11)
+
+        for num in number:
+            num_list.append(num)
+
+        kwargs.update({
+                'formset': formset,
+                'num_list': num_list
+             })
+        print(formset)
+        return render(self.request, self.template_name, self.get_context_data(**kwargs))
+
+
 # 사용자 - 학교 관계자 정보
 class SchoolAuthCreateView(FormView):
     form_class = SchoolAuthCreationForm
@@ -161,6 +190,8 @@ class SchoolAuthCreateView(FormView):
         temp_object.delete()
 
         return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
+
+
 
 
 # temp 데이터 관련 class

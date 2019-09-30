@@ -1,0 +1,57 @@
+{% extends 'user/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Sign Up</title>
+{% endblock head_title %}
+
+{% block content %}
+<form name="parent_form" action="." method="post"> {% csrf_token %}
+    <div class="container">
+        <h3>학부모 정보 입력</h3>
+        <div class="panel-group">
+            <div class="panel panel-primary">
+                <div class="panel-heading">주소 입력</div>
+                <div class="panel-body">
+                    <table>
+                        <tr>
+                            <td>{{ form.address1.label_tag }}</td>
+                            <td>{{ form.address1 }}</td>
+                            <td><input type="button" onclick="address_search()" value="주소 검색"></td>
+                        </tr>
+                        <tr>
+                            <td>{{ form.address2.label_tag }}</td>
+                            <td>{{ form.address2 }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            {{ formset.management_form }}
+            {% for child_form in formset %}
+                <div class="panel panel-primary">
+                    <div class="panel-heading">자녀정보 {{ num }}
+                    </div>
+                    <div class="panel-body">
+                        {{ child_form.as_p }}
+                    </div>
+                </div>
+                1. 성별 html 정의 (name 구분을 줘야함)
+                2. post 했을때 값들을 봐야함
+            {% endfor %}
+            <div class="form-actions">
+                <button class="btn btn-primary" name="next" type="submit">다음</button>
+                <a href="{% url 'user:temp_delete' pk=pk %}">
+                    <button type='button' class="btn btn-danger" name="cancel">취소</button>
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="{% static 'user/js/sign_up.js' %}" type="text/javascript"></script>
+{% endblock content %}
+
+
+
+
+
