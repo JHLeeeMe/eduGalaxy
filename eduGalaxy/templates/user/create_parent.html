@@ -28,15 +28,35 @@
             </div>
             {{ formset.management_form }}
             {% for child_form in formset %}
-                <div class="panel panel-primary">
-                    <div class="panel-heading">자녀정보 {{ num }}
+                <div class="panel panel-default">
+                    <div class="panel-heading">자녀정보
                     </div>
                     <div class="panel-body">
-                        {{ child_form.as_p }}
+                        <table>
+                            <tr>
+                                <td>{{ child_form.school.label_tag }}</td>
+                                <td>{{ child_form.school }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ child_form.grade.label_tag }}</td>
+                                <td>{{ child_form.grade }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ child_form.age.label_tag }}</td>
+                                <td>{{ child_form.age }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ child_form.gender.label_tag }}</td>
+                                <td>
+                                    {% for radio in child_form.gender %}
+                                        {{ radio.tag }}
+                                        <label for="value_{{ forloop.counter0 }}">{{ radio.choice_label }}</label>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
-                1. 성별 html 정의 (name 구분을 줘야함)
-                2. post 했을때 값들을 봐야함
             {% endfor %}
             <div class="form-actions">
                 <button class="btn btn-primary" name="next" type="submit">다음</button>

@@ -1,5 +1,6 @@
 from django import forms
 from django.utils.translation import ugettext as _
+from django.utils.safestring import mark_safe
 
 from apps.user.models import EdUser, Temp, Log, Profile
 from apps.user.models import SchoolAuth, Student, Parent, Child
@@ -21,6 +22,11 @@ GROUP_LIST = (
     ("학생", "학생"),
     ("학부모", "학부모"),
     ("학교 관계자", "학교 관계자")
+)
+
+GENDER_LIST = (
+    ("M", "남"),
+    ("F", "여")
 )
 
 # user 계정 폼
@@ -183,10 +189,17 @@ class StudentCreationForm(forms.Form):
                           address2=address2)
         return student
 
+
 class ParentCreationForm(forms.ModelForm):
     class Meta:
         model = Parent
         fields = ('address1', 'address2')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['address1'].widget.attrs = {'id': 'address1'}
+        self.fields['address2'].widget.attrs = {'id': 'address2'}
+
 
 class ChildCreationForm(forms.Form):
     school = forms.CharField(label='다니는 학교', widget=forms.TextInput)
@@ -202,7 +215,7 @@ class ChildCreationForm(forms.Form):
     grade = forms.CharField(widget=forms.Select(
         choices=tuple(GRADE),
         attrs={'name': 'grade'},
-    ),
+        ),
         label='학년'
     )
 
@@ -218,9 +231,21 @@ class ChildCreationForm(forms.Form):
     age = forms.CharField(widget=forms.Select(
         choices=tuple(AGE_CONTROL),
         attrs={'name': 'age'},
-    ),
+        ),
         label='나이'
     )
+
+    gender = forms.ChoiceField(
+        choices=GENDER_LIST,
+        label='성별',
+        widget= forms.RadioSelect(
+            attrs={
+                'style': 'display: inline-block',
+                'id': 'gender'
+            },
+        )
+    )
+
 
 class SchoolAuthCreationForm(forms.ModelForm):
     class Meta:

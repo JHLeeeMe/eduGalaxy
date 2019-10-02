@@ -146,21 +146,40 @@ class ParentCreateView(CreateView):
 
     def get(self, request, *args, **kwargs):
         self.object = None
-        ChildCreationFormSet = formset_factory(ChildCreationForm, extra=kwargs['extra'])
-        formset = ChildCreationFormSet()
+        ChildCreationFormSet = formset_factory(ChildCreationForm)
+        data = {
+            'form-TOTAL_FORMS': kwargs['extra'],
+            'form-INITIAL_FORMS': '0',
+            'form-MAX_NUM_FORMS': '',
+        }
 
-        num_list = []
-        number = range(1, 11)
+        formset = ChildCreationFormSet(data)
 
-        for num in number:
-            num_list.append(num)
+        # num_list = []
+        # number = range(1, 11)
+
+        # for num in number:
+        #     num_list.append(num)
+
+        # 1. 이 상태로 db에 저장
+        # 2. 추가/제거 버튼 생성
+        # 3. 학력 추가
+
 
         kwargs.update({
                 'formset': formset,
-                'num_list': num_list
-             })
-        print(formset)
+                # 'num_list': num_list
+        })
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
+
+    def form_valid(self, form):
+        ChildCreationFormSet = formset_factory(ChildCreationForm)
+        formset = ChildCreationFormSet(self.request.POST)
+        print(formset.is_valid())
+        print(formset.errors)
+        if formset.is_valid():
+            print(formset.cleaned_data)
+        print(form.cleaned_data)
 
 
 # 사용자 - 학교 관계자 정보
