@@ -30,6 +30,12 @@
             {% for child_form in formset %}
                 <div class="panel panel-default">
                     <div class="panel-heading">자녀정보
+                        &nbsp;
+                        <button type='button' class="btn btn-primary" name="child_add">추가</button>
+
+                        {% if forloop.counter0 > 0 %}
+                            <button type='button' class="btn btn-danger" name="child_delete">제거</button>
+                        {% endif %}
                     </div>
                     <div class="panel-body">
                         <table>

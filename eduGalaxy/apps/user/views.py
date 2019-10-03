@@ -73,16 +73,16 @@ class ProfileCreateView(FormView):
         group = self.request.POST['group']
         pk = temp.id
 
+        temp.profile = data
+        temp.create_date = timezone.now()
+        temp.save()
+
         if group == "학생":
             nexturl = 'user:student'
         elif group == "학교 관계자":
             nexturl = 'user:school_auth'
         elif group == "학부모":
             return HttpResponseRedirect(reverse_lazy('user:parent', kwargs={'pk': pk, 'extra': 2}))
-
-        temp.profile = data
-        temp.create_date = timezone.now()
-        temp.save()
 
         return HttpResponseRedirect(reverse_lazy(nexturl, kwargs={'pk': pk}))
 
@@ -142,44 +142,65 @@ class ParentCreateView(CreateView):
     model = Parent
     form_class = ParentCreationForm
     template_name = "user/create_parent.html"
-    success_url = 'user:result'
 
-    def get(self, request, *args, **kwargs):
-        self.object = None
+    # formset 정의
+    def get_formset(self):
         ChildCreationFormSet = formset_factory(ChildCreationForm)
         data = {
-            'form-TOTAL_FORMS': kwargs['extra'],
+            'form-TOTAL_FORMS': self.kwargs['extra'],
             'form-INITIAL_FORMS': '0',
             'form-MAX_NUM_FORMS': '',
         }
 
-        formset = ChildCreationFormSet(data)
+        if self.request.method in ('POST'):
+            formset = ChildCreationFormSet(self.request.POST)
+        else:
+            formset = ChildCreationFormSet(data)
+        return formset
 
-        # num_list = []
-        # number = range(1, 11)
-
-        # for num in number:
-        #     num_list.append(num)
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        cnt = kwargs['extra']
+        formset = self.get_formset()
 
         # 1. 이 상태로 db에 저장
         # 2. 추가/제거 버튼 생성
         # 3. 학력 추가
 
-
         kwargs.update({
-                'formset': formset,
-                # 'num_list': num_list
+                'formset': formset
         })
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
 
     def form_valid(self, form):
-        ChildCreationFormSet = formset_factory(ChildCreationForm)
-        formset = ChildCreationFormSet(self.request.POST)
-        print(formset.is_valid())
-        print(formset.errors)
-        if formset.is_valid():
-            print(formset.cleaned_data)
-        print(form.cleaned_data)
+        formsets = self.get_formset()
+
+        if formsets.is_valid():
+            temp = TempUtil(self.kwargs['pk'])
+
+            # EdUer save
+            eduser = temp.eduser_save()
+
+            # Profile save
+            profile = temp.profile_save()
+
+            # Parent save
+            parent = form.save(commit=False)
+            parent.profile = profile
+            parent.save()
+
+            # Child save
+            for formset in formsets:
+                child = formset.child_data(parent)
+                child.save()
+
+            # Temp delete
+            temp_object = temp.get_object()
+            temp_object.delete()
+        else:
+            return self.form_invalid(form)
+
+        return HttpResponseRedirect(reverse_lazy('user:result', kwargs={'pk': eduser.id}))
 
 
 # 사용자 - 학교 관계자 정보
@@ -209,8 +230,6 @@ class SchoolAuthCreateView(FormView):
         temp_object.delete()
 
         return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
-
-
 
 
 # temp 데이터 관련 class

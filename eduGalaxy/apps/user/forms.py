@@ -246,6 +246,17 @@ class ChildCreationForm(forms.Form):
         )
     )
 
+    def child_data(self, parent):
+        child = Child(
+            parent = parent,
+            school = self.cleaned_data.get('school'),
+            grade = self.cleaned_data.get('grade'),
+            age = self.cleaned_data.get('age'),
+            gender = self.cleaned_data.get('gender')
+        )
+        return child
+
+
 
 class SchoolAuthCreationForm(forms.ModelForm):
     class Meta:
