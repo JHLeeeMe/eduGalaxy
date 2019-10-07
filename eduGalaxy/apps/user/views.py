@@ -293,8 +293,9 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
         return super().get_initial()
 
     def get_group_num(self):
+        # global 지워도댈듯
         global num
-        profile = self.get_object(queryset=None)
+        profile = self.get_object(queryset=None)  # get_object 파라미터 지워도 기본값이 queryset=None
         if profile.group == "학생":
             num = 0
         elif profile.group == "학교 관계자":
@@ -315,14 +316,49 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
         return get_object_or_404(SchoolAuth, profile_id=pk)
 
     def get_context_data(self, **kwargs):
-        kwargs.update({'group': self.get_group_num()})
+        kwargs.update({'group': self.get_group_num(),
+                       'eduLevel_graduation': EduLevel.objects.filter(student_id=self.kwargs['pk'])
+                                                              .exclude(status='재학중'),
+                       'eduLevel_attendance': EduLevel.objects.filter(student_id=self.kwargs['pk'])
+                                                              .get(status='재학중')
+                       })
+        print(kwargs)
         return super().get_context_data(**kwargs)
 
     def form_valid(self, form):
         group = self.get_group_num()
         if group == 0:
+            # Student save
             student = self.get_student()
             form.student_save(student)
+
+            try:
+                # EduLevel save
+                edulevel = EduLevel.objects.filter(student_id=student.pk)\
+                                           .get(status='재학중')
+                if edulevel.school != student.school:  # 재학중인 학교가 기존의 학교와 다를 때
+                    edulevel.school = student.school
+                    edulevel.modified_cnt = 1
+                    edulevel.save()
+            except:
+                # messages.error()
+                pass
+            else:
+                # 졸업한 학교가 있을 때
+                graduated_school_list = self.request.POST.getlist('graduated_school')
+                print(graduated_school_list)
+                graduated_school_list.remove('')
+                if edulevel.school in graduated_school_list:
+                    graduated_school_list.remove(edulevel.school)
+                graduated_school_list = list(set(graduated_school_list))
+                if graduated_school_list:
+                    for school in graduated_school_list:
+                        edulevel = EduLevel(school=school,
+                                            status='졸업',
+                                            student_id=student.pk,
+                                            modified_cnt=1)
+                        edulevel.save()
+
         elif group == 1:
             schoolauth = self.get_schoolauth()
             file = self.get_file()

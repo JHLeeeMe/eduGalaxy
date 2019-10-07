@@ -166,7 +166,7 @@ class StudentCreationForm(forms.Form):
         )
     )
     
-     # 학력 추가 필요
+    # 학력 추가 필요
     def student_data(self, profile):
         school = self.cleaned_data.get('school')
         grade = self.cleaned_data.get('grade')
