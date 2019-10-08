@@ -20,8 +20,8 @@
 
             <div class="panel-body">
                 <form name="Signup_Form" action="." method="post"> {% csrf_token %}
-                    {% if form.errors %}
-                        {{ form.non_field_errors }}
+                    {% if error_msg %}
+                        {{ error_msg }}
                     {% endif %}
                     <table>
                         <tr>
@@ -37,10 +37,6 @@
                         <tr>
                             <td>{{ form.password2.label_tag }}</td>
                             <td>{{ form.password2 }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ form.nickname.label_tag}}</td>
-                            <td>{{ form.nickname }}</td>
                         </tr>
                     </table>
                     <div class="form-actions">

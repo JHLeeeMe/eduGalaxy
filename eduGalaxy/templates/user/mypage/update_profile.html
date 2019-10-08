@@ -23,6 +23,7 @@
             {% if group == 0 %}
             <div class="panel panel-primary">
                 <div class="panel-heading">학생정보변경</div>
+                <a href="{% url 'user:update_edulevel' pk=user.pk %}">학력 수정</a>
                 <div class="panel-body">
                     <table>
                         <tr>
