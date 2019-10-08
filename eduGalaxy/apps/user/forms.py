@@ -27,15 +27,15 @@ class EdUserCreationForm(forms.Form):
     email1 = forms.CharField(widget=forms.TextInput(
             attrs={
                 'autofocus': 'autofocus',
-                'required': 'required'}
-        ),
+                'required': 'required',}
+            ),
         label='이메일'
     )
 
     email2 = forms.CharField(widget=forms.TextInput(
             attrs={
                 'id': 'user_email2',
-                'disabled': 'disabled'}
+                'disabled': 'disabled',}
         )
     )
 
@@ -56,7 +56,7 @@ class EdUserCreationForm(forms.Form):
     password2 = forms.CharField(
         label=_("비밀번호 확인"),
         strip=False,
-        widget=forms.PasswordInput,
+        widget=forms.PasswordInput
     )
 
     # 폼 유효성 검사
@@ -64,7 +64,8 @@ class EdUserCreationForm(forms.Form):
         cleaned_data = super().clean()
         password1 = cleaned_data.get('password1')
         password2 = cleaned_data.get('password2')
-        email = self.make_email()
+
+        email = cleaned_data['email1'] + "@" + cleaned_data['email2']
 
         check_email = EdUser.objects.filter(email=email)
 
@@ -72,12 +73,16 @@ class EdUserCreationForm(forms.Form):
             raise forms.ValidationError("비밀번호 오류입니다. 다시 입력해주세요")
         if check_email.exists():
             raise forms.ValidationError("해당 이메일은 이미 가입하셨습니다.")
+
         return super().clean()
 
     # cleaned_data temp에 저장
     def save(self, commit=True):
-        email = self.make_email()
+        email1 = self.cleaned_data.get('email1')
+        email2 = self.cleaned_data.get('email2')
         password = self.cleaned_data.get("password1")
+
+        email = email1 + "@" + email2
 
         eduser = email + "| " + password
         temp = Temp(eduser=eduser)
@@ -86,14 +91,6 @@ class EdUserCreationForm(forms.Form):
             temp.save()
 
         return temp
-
-    # 이메일 문자열 조합
-    def make_email(self):
-        email1 = self.cleaned_data.get("email1")
-        email2 = self.cleaned_data.get("email2")
-        email = email1 + "@" + email2
-
-        return email
 
 
 # user 세부 정보 폼
@@ -156,10 +153,20 @@ class StudentCreationForm(forms.Form):
         ),
         label='나이'
     )
-    address1 = forms.CharField(label='주소', widget=forms.TextInput)
-    address2 = forms.CharField(label='상세 주소', widget=forms.TextInput)
+    address1 = forms.CharField(
+        label='주소',
+        widget=forms.TextInput(
+            attrs={'id': 'address1'}
+        )
+    )
+    address2 = forms.CharField(
+        label='상세 주소',
+        widget=forms.TextInput(
+            attrs={'id': 'address2'}
+        )
+    )
     
-     # 학력 추가 필요
+    # 학력 추가 필요
     def student_data(self, profile):
         school = self.cleaned_data.get('school')
         grade = self.cleaned_data.get('grade')
@@ -302,5 +309,4 @@ class ProfileUpdateForm(forms.ModelForm):
         schoolauth.tel = self.cleaned_data.get('tel')
 
         return schoolauth
-
 

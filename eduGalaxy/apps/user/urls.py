@@ -17,6 +17,7 @@ urlpatterns = [
     path('mypage/', user_views.EdUserMypageView.as_view(), name='mypage'),
     path('mypage/change_password/', user_views.PasswordChangeView.as_view(), name='change_password'),
     path('mypage/<int:pk>/update_profile/', user_views.ProfileUpdateView.as_view(), name='update_profile'),
+    path('mypage/<int:pk>/update_edulevel/', user_views.EduLevelUpdateView.as_view(), name='update_edulevel'),
     path('mypage/<int:pk>/delete/', user_views.EdUserDeleteView.as_view(), name='user_delete'),
 
     path('<pk>/verify/<token>/', user_views.EduUserVerificationView.as_view(), name='verify'),

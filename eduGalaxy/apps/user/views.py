@@ -41,6 +41,17 @@ class EdUserCreateView(FormView):
         eduser_id = temp.id
         return HttpResponseRedirect(reverse_lazy('user:profile', kwargs={'pk': eduser_id}))
 
+    # validation error 시 필드값 초기화 및 에러 메시지 호출
+    def form_invalid(self, form):
+        # non_field_error() : error 메시지만 리턴
+        error_data = form.non_field_errors()
+        form = self.form_class(initial=self.initial)
+        context = {
+            'form': form,
+            'error_msg': error_data
+        }
+        return render(self.request, self.template_name, context)
+
 
 # 사용자 계정 세부내용
 class ProfileCreateView(FormView):
@@ -81,13 +92,6 @@ class StudentCreateView(FormView):
     def get(self, request, *args, **kwargs):
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
 
-    def post(self, request, *args, **kwargs):
-        form = self.get_form()
-        if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
-
     def form_valid(self, form):
         temp = TempUtil(self.kwargs['pk'])
 
@@ -108,10 +112,11 @@ class StudentCreateView(FormView):
                             student_id=student.pk,
                             modified_cnt=0)
         edulevel.save()
+
         # 졸업한 학교가 있을 때
         graduated_school_list = self.request.POST.getlist('graduated_school')
-        graduated_school_list.remove('')
         graduated_school_list = list(set(graduated_school_list))
+        graduated_school_list.remove('')
         if student.school in graduated_school_list:
             graduated_school_list.remove(student.school)
         if graduated_school_list:
@@ -224,8 +229,7 @@ class EdUserMypageView(TemplateView, LoginRequiredMixin):
     def get(self, request, *args, **kwargs):
         email = self.request.user.get_username()
         eduser = EdUser.objects.get(email=email)
-        pk = eduser.id
-        kwargs.update({'pk': pk})
+        kwargs.update({'pk': eduser.id})
         return super().get(request, *args, **kwargs)
 
 
@@ -260,6 +264,7 @@ class PasswordChangeView(FormView, LoginRequiredMixin):
         return HttpResponseRedirect(self.get_success_url())
 
 
+# 프로필 수정
 class ProfileUpdateView(UpdateView, LoginRequiredMixin):
     model = Profile
     context_object_name = 'profile'
@@ -288,8 +293,9 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
         return super().get_initial()
 
     def get_group_num(self):
+        # 지워도댈듯
         global num
-        profile = self.get_object(queryset=None)
+        profile = self.get_object(queryset=None)  # get_object 파라미터 지워도 기본값이 queryset=None
         if profile.group == "학생":
             num = 0
         elif profile.group == "학교 관계자":
@@ -313,14 +319,10 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
         kwargs.update({'group': self.get_group_num()})
         return super().get_context_data(**kwargs)
 
-    # ???
-    def get(self, request, *args, **kwargs):
-        form = self.get_form()
-        super().get(request, *args, **kwargs)
-
     def form_valid(self, form):
         group = self.get_group_num()
         if group == 0:
+            # Student save
             student = self.get_student()
             form.student_save(student)
         elif group == 1:
@@ -338,6 +340,52 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
         return super().form_valid(form)
 
 
+# 학생 학력 수정 뷰
+class EduLevelUpdateView(View, LoginRequiredMixin):
+    template_name = 'user/mypage/update_edulevel.html'
+    redirect_url = 'user:mypage'
+
+    def get(self, request, *args, **kwargs):
+        graduated_school = EduLevel.objects.filter(student_id=kwargs.get('pk'))\
+                                           .exclude(status='재학중')
+        return render(request, self.template_name, {'graduated_school': graduated_school})
+
+    def post(self, request, **kwargs):
+        # 입력받은 졸업학교 리스트를 전처리
+        graduated_school_list = self.request.POST.getlist('graduated_school')
+        graduated_school_list = list(set(graduated_school_list))
+        graduated_school_list.remove('')
+
+        # GET EduLevel multiple objects
+        edulevel = EduLevel.objects.filter(student_id=request.user.pk)
+
+        # 재학중인 학교가 입력받은 학교에 있을 때
+        if edulevel.get(status='재학중').school in graduated_school_list:
+            graduated_school_list.remove(edulevel.get(status='재학중').school)
+
+        try:
+            # 졸업한 학교들을 리스트로 저장
+            edulevel_graduated_school_list = []
+            for i in edulevel.filter(status='졸업'):
+                edulevel_graduated_school_list.append(i.school)
+
+            # 입력받은 졸업학교 리스트와 저장돼 있는 학교들을 비교 & graduated_school_list 수정
+            graduated_school_list = [x for x in graduated_school_list if x not in edulevel_graduated_school_list]
+        except:
+            # messages.error()
+            pass
+        finally:
+            if graduated_school_list:
+                for school in graduated_school_list:
+                    edulevel = EduLevel(school=school,
+                                        status='졸업',
+                                        student_id=request.user.pk,
+                                        modified_cnt=1)
+                    edulevel.save()
+
+        return redirect(self.redirect_url)
+
+
 # 회원 탈퇴 뷰
 class EdUserDeleteView(RedirectView, LoginRequiredMixin):
     def get(self, request, *args, **kwargs):
@@ -346,7 +394,7 @@ class EdUserDeleteView(RedirectView, LoginRequiredMixin):
         return redirect('school:index')
 
 
-# 여기서부터 소셜 로그인
+# 이메일 전송 뷰
 class EduUserVerificationView(TemplateView):
     model = get_user_model()
     token_generator = default_token_generator
@@ -371,6 +419,7 @@ class EduUserVerificationView(TemplateView):
         return is_valid
 
 
+# 여기서부터 소셜 로그인
 class ResendVerificationEmailView(View, VerificationEmailMixin):
     model = get_user_model()
 
