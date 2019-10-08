@@ -310,4 +310,3 @@ class ProfileUpdateForm(forms.ModelForm):
 
         return schoolauth
 
-

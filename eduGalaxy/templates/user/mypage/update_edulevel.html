@@ -1,0 +1,29 @@
+{% extends 'school/base.html' %}
+{% load static %}
+
+{% block gbody %}
+<form name="update_profile_form" action="." method="post"> {% csrf_token %}
+    <div class="container">
+        <div class="panel panel-primary">
+            <div class="panel-heading">학력 수정</div>
+            <div class="panel-body">
+                <div id="div_graduation">
+                    <p><strong>졸업한 학교 <i class='fas fa-plus' onclick='addField()'></i></strong></p>
+                    <p id="p_graduation" style="display:none">
+                        <input type='text' name='graduated_school'>
+                        <i class='fas fa-minus' onclick='removeField(this)'></i>
+                    </p>
+                    {% for i in graduated_school %}
+                    <p name="initial">{{i.school}}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-actions">
+        <button class="btn btn-primary" type="submit">변경</button>
+        <button class="btn btn-danger" onclick="history.back(-1);">취소</button>
+    </div>
+</form>
+<script src="{% static 'user/js/sign_up.js' %}" type="text/javascript"></script>
+{% endblock gbody %}
