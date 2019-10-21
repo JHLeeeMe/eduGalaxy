@@ -1,5 +1,5 @@
 from django.urls import reverse_lazy, reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.edit import FormView, View, UpdateView, CreateView
 from django.views.generic.base import TemplateView, RedirectView
@@ -10,8 +10,6 @@ from django.contrib.auth import get_user_model, login
 from django.contrib import messages
 from django.utils import timezone
 
-from django.forms.formsets import formset_factory
-
 # social auth
 from .oauth.providers.naver import NaverLoginMixin
 from django.middleware.csrf import _compare_salted_tokens
@@ -20,7 +18,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from .mixins import VerificationEmailMixin
 from apps.user.forms import *
 from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth, EduLevel
-from apps.user.models import Parent, Child
+from apps.user.models import Parent, Child, TempChild
 
 import os
 
@@ -82,7 +80,7 @@ class ProfileCreateView(FormView):
         elif group == "학교 관계자":
             nexturl = 'user:school_auth'
         elif group == "학부모":
-            return HttpResponseRedirect(reverse_lazy('user:parent', kwargs={'pk': pk, 'extra': 2}))
+            nexturl = 'user:parent'
 
         return HttpResponseRedirect(reverse_lazy(nexturl, kwargs={'pk': pk}))
 
@@ -138,70 +136,73 @@ class StudentCreateView(FormView):
         return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
 
 
+# 학부모 정보 입력
 class ParentCreateView(CreateView):
     model = Parent
     form_class = ParentCreationForm
     template_name = "user/create_parent.html"
 
-    # formset 정의
-    def get_formset(self):
-        ChildCreationFormSet = formset_factory(ChildCreationForm)
-        data = {
-            'form-TOTAL_FORMS': self.kwargs['extra'],
-            'form-INITIAL_FORMS': '0',
-            'form-MAX_NUM_FORMS': '',
-        }
-
-        if self.request.method in ('POST'):
-            formset = ChildCreationFormSet(self.request.POST)
-        else:
-            formset = ChildCreationFormSet(data)
-        return formset
+    def get_child(self):
+        pk = self.kwargs['pk']
+        temp = get_object_or_404(Temp, id=pk)
+        return TempChild.objects.filter(temp=temp)
 
     def get(self, request, *args, **kwargs):
         self.object = None
-        cnt = kwargs['extra']
-        formset = self.get_formset()
-
-        # 1. 이 상태로 db에 저장
-        # 2. 추가/제거 버튼 생성
-        # 3. 학력 추가
-
-        kwargs.update({
-                'formset': formset
-        })
+        if self.get_child():
+            kwargs.update({
+               'children': self.get_child()
+            })
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
 
+    # formset 정의
     def form_valid(self, form):
-        formsets = self.get_formset()
 
-        if formsets.is_valid():
-            temp = TempUtil(self.kwargs['pk'])
+        temp = TempUtil(self.kwargs['pk'])
 
-            # EdUer save
-            eduser = temp.eduser_save()
+        # EdUer save
+        eduser = temp.eduser_save()
 
-            # Profile save
-            profile = temp.profile_save()
+        # Profile save
+        profile = temp.profile_save()
 
-            # Parent save
-            parent = form.save(commit=False)
-            parent.profile = profile
-            parent.save()
-
-            # Child save
-            for formset in formsets:
-                child = formset.child_data(parent)
-                child.save()
-
-            # Temp delete
-            temp_object = temp.get_object()
-            temp_object.delete()
-        else:
-            return self.form_invalid(form)
+        # Temp delete
+        temp_object = temp.get_object()
+        temp_object.delete()
 
         return HttpResponseRedirect(reverse_lazy('user:result', kwargs={'pk': eduser.id}))
 
+
+# 자녀 정보 입력 뷰
+class ChildCreateView(FormView):
+    form_class = ChildCreationForm
+    template_name = "user/create_child.html"
+
+    def get_object(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(Temp, id=pk)
+
+    def get(self, request, *args, **kwargs):
+        return render(self.request, self.template_name, self.get_context_data(**kwargs))
+
+    def form_valid(self, form):
+        temp = self.get_object()
+        temp_child = form.child_data()
+
+        temp_child.temp = temp
+        temp_child.save()
+
+        return HttpResponseRedirect(reverse_lazy('user:parent', kwargs={'pk': temp.id}))
+
+# 자녀 정보 삭제 뷰
+class TempChildDeleteView(RedirectView):
+    def get(self, request, *args, **kwargs):
+        pk = self.kwargs['pk']
+        tempchild = get_object_or_404(TempChild, id=pk)
+        temp = tempchild.temp
+
+        tempchild.delete()
+        return HttpResponseRedirect(reverse_lazy('user:parent', kwargs={'pk': temp.id}))
 
 # 사용자 - 학교 관계자 정보
 class SchoolAuthCreateView(FormView):
@@ -287,6 +288,11 @@ class TempDeleteView(RedirectView):
     def get(self, request, *args, **kwargs):
         temp = TempUtil(self.kwargs['pk'])
         temp_object = temp.get_object()
+
+        tempchild = TempChild.objects.filter(temp=temp_object)
+        if tempchild.exists():
+            tempchild.delete()
+
         temp_object.delete()
         return redirect('school:index')
 
