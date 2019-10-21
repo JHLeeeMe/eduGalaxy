@@ -1,0 +1,50 @@
+{% extends 'user/base.html' %}
+{% load static %}
+
+{% block head_title %}
+<title>Sign Up</title>
+{% endblock head_title %}
+
+{% block content %}
+<form name="Child_Form" action="." method="post"> {% csrf_token %}
+    <div class="panel panel-success">
+        <div class="panel-heading">자녀 정보 입력</div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-2">{{ form.school.label_tag }}</div>
+                <div class="col-sm-6">{{ form.school }}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-2">{{ form.grade.label_tag }}</div>
+                <div class="col-sm-6">{{ form.grade }}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-2">{{ form.age.label_tag }}</div>
+                <div class="col-sm-6">{{ form.age }}</div>
+            </div>
+            <div class="row">
+                <div class="col-sm-2">{{ form.gender.label_tag }}</div>
+                <div class="col-sm-6">
+                    {% for radio in form.gender %}
+                        {{ radio.tag }}
+                        <label for="value_{{ forloop.counter0 }}">{{ radio.choice_label }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="panel panel-success">
+        <div class="panel-heading">자녀 학력 입력</div>
+        <div class="panel-body">
+            <div class="row">
+            </div>
+        </div>
+    </div>
+    <div class="form-actions">
+        <button class="btn btn-primary" name="next" type="submit">확인</button>
+        <button type="button" class="btn btn-danger" onclick="history.back(-1);">뒤로</button>
+    </div>
+</form>
+{% endblock content %}

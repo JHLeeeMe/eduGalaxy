@@ -194,8 +194,15 @@ class EduLevel(models.Model):
 class Temp(models.Model):
     eduser = models.CharField(verbose_name='기본정보', max_length=100)
     profile = models.CharField(verbose_name='프로필', max_length=100)
-    student = models.CharField(verbose_name='학생정보', max_length=250, null=True)
-    parent = models.CharField(verbose_name='학부모정보', max_length=200, null=True)
-    schoolauth = models.CharField(verbose_name='학교관계자정보', max_length=100, null=True)
-    child = models.CharField(verbose_name='자녀정보', max_length=100, null=True)
     create_date = models.DateTimeField(verbose_name='생성날짜', blank=True, null=True)
+
+
+class TempChild(models.Model):
+    temp = models.ForeignKey(Temp, on_delete=models.CASCADE)
+
+    school = models.CharField(verbose_name='학교', max_length=20, null=False)
+    grade = models.IntegerField(default=0, verbose_name='학년')
+    age = models.IntegerField(default=0, verbose_name='나이')
+    gender = models.CharField(default='U', max_length=2, verbose_name='성별')
+    edulevel = models.CharField(verbose_name='학력', max_length=200)
+
