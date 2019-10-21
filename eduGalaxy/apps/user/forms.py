@@ -1,10 +1,11 @@
 from django import forms
+from django.forms import formset_factory
+
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 
-from apps.user.models import EdUser, Temp, Log, Profile
+from apps.user.models import EdUser, Temp, TempChild, Log, Profile
 from apps.user.models import SchoolAuth, Student, Parent, Child
-
 
 EMAIL_LIST = (
     ("select", "선택하세요"),
@@ -25,8 +26,8 @@ GROUP_LIST = (
 )
 
 GENDER_LIST = (
-    ("M", "남"),
-    ("F", "여")
+    ("남", "남"),
+    ("여", "여")
 )
 
 # user 계정 폼
@@ -245,6 +246,15 @@ class ChildCreationForm(forms.Form):
             },
         )
     )
+
+    def child_data(self):
+        child = TempChild(
+            school = self.cleaned_data.get('school'),
+            grade = self.cleaned_data.get('grade'),
+            age = self.cleaned_data.get('age'),
+            gender = self.cleaned_data.get('gender')
+        )
+        return child
 
 
 class SchoolAuthCreationForm(forms.ModelForm):
