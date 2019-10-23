@@ -1,6 +1,6 @@
-{% extends 'school/base.html' %}
+{% extends 'user/mypage/update_base.html' %}
 
-{% block gbody %}
+{% block mypage_gbody %}
 <form name="update_profile_form" action="." method="post" enctype="multipart/form-data"> {% csrf_token %}
     <div class="container">
         <h2>프로필 변경</h2>
@@ -8,7 +8,7 @@
             <div class="panel panel-primary">
                 <div class="panel-heading">기본정보 변경</div>
                 <div class="panel-body">
-                    <table>
+                    <table onchange="submitBtnCtrl()">
                         <tr>
                             <td>{{ form.phone.label_tag }}</td>
                             <td>{{ form.phone }}</td>
@@ -20,61 +20,11 @@
                     </table>
                 </div>
             </div>
-            {% if group == 0 %}
-            <div class="panel panel-primary">
-                <div class="panel-heading">학생정보변경</div>
-                <a href="{% url 'user:update_edulevel' pk=user.pk %}">학력 수정</a>
-                <div class="panel-body">
-                    <table>
-                        <tr>
-                            <td>{{ form.school.label_tag }}</td>
-                            <td>{{ form.school }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ form.grade.label_tag }}</td>
-                            <td>{{ form.grade }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ form.age.label_tag }}</td>
-                            <td>{{ form.age }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ form.address1.label_tag }}</td>
-                            <td>{{ form.address1 }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ form.address2.label_tag }}</td>
-                            <td>{{ form.address2 }}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-            {% elif group == 1 %}
-            <div class="panel panel-primary">
-                <div class="panel-heading">학교 관계자 정보변경</div>
-                <div class="panel-body">
-                    <table>
-                        <tr>
-                            <td>{{ form.school.label_tag }}</td>
-                            <td>{{ form.school }}<br><br></td>
-                        </tr>
-                        <tr>
-                            <td>{{ form.auth_doc.label_tag }}</td>
-                            <td>{{ form.auth_doc }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ form.tel.label_tag }}</td>
-                            <td>{{ form.tel }}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-            {% endif %}
         </div>
     </div>
     <div class="form-actions">
-        <button class="btn btn-primary" type="submit">변경</button>
-        <button class="btn btn-danger" onclick="history.back(-1);">취소</button>
+        <button id="submit-btn" class="btn btn-primary" type="submit" disabled>변경</button>
+        <button class="btn btn-danger" onclick="history.back(-1);">뒤로가기</button>
     </div>
 </form>
-{% endblock gbody %}
+{% endblock mypage_gbody %}
