@@ -1,0 +1,58 @@
+{% extends 'user/mypage/update_base.html' %}
+
+{% block mypage_gbody %}
+<form name="update_profile_form" action="." method="post" enctype="multipart/form-data"> {% csrf_token %}
+    <div class="container">
+        <h2>프로필 변경</h2>
+        <div class="panel-group">
+            <div class="panel panel-primary">
+                <div class="panel-heading">학생 세부정보 변경</div>
+                <div class="panel-body" onchange="submitBtnCtrl()">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-warning">
+                                {{ message }}<br>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    <p>
+                        {{ form.school.label_tag }}
+                        {{ form.school }}
+                    </p>
+                    <p>
+                        {{ form.grade.label_tag }}
+                        {{ form.grade }}
+                    </p>
+                    <p>
+                        {{ form.age.label_tag }}
+                        {{ form.age }}
+                    </p>
+<!--                    <div class="col-sm-2">{{ form.gender.label_tag }}</div>-->
+<!--                    <div class="col-sm-6">-->
+<!--                        {% for radio in form.gender %}-->
+<!--                            {{ radio.tag }}-->
+<!--                            {{ radio.choice_label }}-->
+<!--                        {% endfor %}-->
+<!--                    </div>-->
+                    <p>
+                        성별:
+                        <label><input type="radio" name="gender" value="M" checked='checked'>남</label>
+                        <label><input type="radio" name="gender" value="F">여</label>
+                    </p>
+                    <p>
+                        {{ form.address1.label_tag }}
+                        {{ form.address1 }}
+                    </p>
+                    <p>
+                        {{ form.address2.label_tag }}
+                        {{ form.address2 }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-actions">
+        <button id="submit-btn" class="btn btn-primary" type="submit" disabled>변경</button>
+    </div>
+</form>
+{% endblock mypage_gbody %}

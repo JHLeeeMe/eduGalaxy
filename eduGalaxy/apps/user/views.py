@@ -8,6 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model, login
 from django.contrib import messages
+from django.contrib.messages.views import SuccessMessageMixin
 from django.utils import timezone
 
 # social auth
@@ -17,8 +18,8 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from .mixins import VerificationEmailMixin
 from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm
-from apps.user.forms import ProfileUpdateForm, PasswordChangeForm
-from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth, EduLevel
+from apps.user.forms import ProfileUpdateForm, StudentUpdateForm, SchoolAuthUpdateForm, PasswordChangeForm
+from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth, Parent, EduLevel
 
 import os
 
@@ -267,78 +268,82 @@ class PasswordChangeView(FormView, LoginRequiredMixin):
 # 프로필 수정
 class ProfileUpdateView(UpdateView, LoginRequiredMixin):
     model = Profile
-    context_object_name = 'profile'
     form_class = ProfileUpdateForm
-    template_name = "user/mypage/update_profile.html"
+    context_object_name = 'profile'
+    template_name = 'user/mypage/update_profile.html'
     success_url = reverse_lazy('user:mypage')
 
-    def get_initial(self):
-        group = self.get_group_num()
-        if group == 0:
-            student = self.get_student()
-            self.initial = {
-                'school': student.school,
-                'grade': student.grade,
-                'age': student.age,
-                'address1': student.address1,
-                'address2': student.address2,
-            }
-        else:
-            schoolauth = self.get_schoolauth()
-            self.initial = {
-                'school': schoolauth.school,
-                'auth_doc': schoolauth.auth_doc,
-                'tel': schoolauth.tel,
-            }
-        return super().get_initial()
+    def get_object(self):
+        profile = get_object_or_404(Profile, pk=self.request.user.pk)
 
-    def get_group_num(self):
-        # 지워도댈듯
-        global num
-        profile = self.get_object(queryset=None)  # get_object 파라미터 지워도 기본값이 queryset=None
-        if profile.group == "학생":
-            num = 0
-        elif profile.group == "학교 관계자":
-            num = 1
-        return num
+        return profile
 
-    def get_file(self):
-        pk = self.kwargs['pk']
-        file = SchoolAuth.objects.filter(profile_id=pk).values_list('auth_doc', flat=True)
-        return file
 
-    def get_student(self):
-        pk = self.kwargs['pk']
-        return get_object_or_404(Student, profile_id=pk)
+class StudentUpdateView(SuccessMessageMixin, UpdateView, LoginRequiredMixin):
+    model = Student
+    form_class = StudentUpdateForm
+    context_object_name = 'student'
+    template_name = 'user/mypage/update_student.html'
+    success_message = '수정이 완료 되었습니다.'
+    success_url = reverse_lazy('user:update_student')
 
-    def get_schoolauth(self):
-        pk = self.kwargs['pk']
-        return get_object_or_404(SchoolAuth, profile_id=pk)
+    def get_object(self):
+        student = get_object_or_404(Student, pk=self.request.user.pk)
 
-    def get_context_data(self, **kwargs):
-        kwargs.update({'group': self.get_group_num()})
-        return super().get_context_data(**kwargs)
+        return student
 
     def form_valid(self, form):
-        group = self.get_group_num()
-        if group == 0:
-            # Student save
-            student = self.get_student()
-            form.student_save(student)
-        elif group == 1:
-            schoolauth = self.get_schoolauth()
-            file = self.get_file()
-            file_path = "media/" + file[0]
+        student = form.save(commit=False)
+        if not student.gender == self.request.POST.get('gender'):
+            student.gender = self.request.POST.get('gender')
+        student.save()
 
-            if os.path.isfile(file_path):
-                os.remove(file_path)
+        messages.add_message(self.request, messages.SUCCESS, self.success_message)
 
-            data = form.schoolauth_save(schoolauth)
-            data.auth_doc = self.request.FILES['auth_doc']
-            data.save()
+        return redirect(self.success_url)
+
+
+class SchoolAuthUpdateView(UpdateView, LoginRequiredMixin):
+    model = SchoolAuth
+    form_class = SchoolAuthUpdateForm
+    context_object_name = 'school_auth'
+    template_name = 'user/mypage/update_school_auth.html'
+    success_message = '수정이 완료 되었습니다.'
+    success_url = reverse_lazy('user:update_school_auth')
+
+    def get_object(self):
+        school_auth = get_object_or_404(SchoolAuth, pk=self.request.user.pk)
+
+        return school_auth
+
+    def get_file(self):
+        file = SchoolAuth.objects.values_list('auth_doc', flat=True).get(profile_id=self.request.user.pk)
+
+        return file
+
+    def form_valid(self, form):
+        file = self.get_file()
+        file_path = "media/" + file
+
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+
+        messages.add_message(self.request, messages.SUCCESS, self.success_message)
 
         return super().form_valid(form)
 
+
+# class ParentUpdateView(UpdateView, LoginRequiredMixin):
+#     model = Parent
+#     form_class = ParentUpdateForm
+#     context_object_name = 'parent'
+#     template_name = 'user/mypage/update_profile.html'
+#     success_url = reverse_lazy('user:update_profile')
+#
+#     def get_object(self):
+#         parent = get_object_or_404(Parent, pk=self.request.user.pk)
+#
+#         return parent
 
 # 학생 학력 수정 뷰
 class EduLevelUpdateView(View, LoginRequiredMixin):
@@ -348,7 +353,8 @@ class EduLevelUpdateView(View, LoginRequiredMixin):
     def get(self, request, *args, **kwargs):
         graduated_school = EduLevel.objects.filter(student_id=kwargs.get('pk'))\
                                            .exclude(status='재학중')
-        return render(request, self.template_name, {'graduated_school': graduated_school})
+        student = Student.objects.get(pk=kwargs.get('pk'))
+        return render(request, self.template_name, {'student': student, 'graduated_school': graduated_school})
 
     def post(self, request, **kwargs):
         # 입력받은 졸업학교 리스트를 전처리
