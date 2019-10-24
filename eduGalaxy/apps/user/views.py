@@ -182,7 +182,15 @@ class ChildCreateView(FormView):
         pk = self.kwargs['pk']
         return get_object_or_404(Temp, id=pk)
 
+    def get_formset(self):
+        if self.request.method == 'POST':
+            formset = EduLevelFormset(self.request.POST)
+        else:
+            formset = EduLevelFormset()
+        return formset
+
     def get(self, request, *args, **kwargs):
+        kwargs.update({'formsets': self.get_formset()})
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
 
     def form_valid(self, form):
