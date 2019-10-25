@@ -257,6 +257,19 @@ class ChildCreationForm(forms.Form):
         return child
 
 
+# Temp 학력
+class EduLevelForm(forms.Form):
+    edulevel = forms.CharField(
+        label='졸업한 학교',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control'
+            }
+        )
+    )
+EduLevelFormset = formset_factory(EduLevelForm, extra=1)
+
+
 class SchoolAuthCreationForm(forms.ModelForm):
     class Meta:
         model = SchoolAuth
