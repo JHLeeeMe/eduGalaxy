@@ -2,7 +2,6 @@ from django import forms
 from django.forms import formset_factory
 
 from django.utils.translation import ugettext as _
-from django.utils.safestring import mark_safe
 
 from apps.user.models import EdUser, Temp, TempChild, Log, Profile
 from apps.user.models import SchoolAuth, Student, Parent, Child
@@ -114,6 +113,7 @@ class ProfileCreationForm(forms.Form):
         label='이메일 수신 동의',
         required=False,
     )
+
     # 본인인증 여부는 추후 구현 예정(핸드폰 인증/이메일 인증)
     # phone 필드는 수정이 필요한 부분
     def profile_data(self):
@@ -130,7 +130,6 @@ class ProfileCreationForm(forms.Form):
 
 class StudentCreationForm(forms.Form):
     school = forms.CharField(label='다니는 학교', widget=forms.TextInput)
-
     grade_list = range(0, 7)
     GRADE = []
     for grade in grade_list:
@@ -173,8 +172,8 @@ class StudentCreationForm(forms.Form):
             attrs={'id': 'address2'}
         )
     )
-    
-     # 학력 추가 필요
+
+    # 학력 추가 필요
     def student_data(self, profile):
         school = self.cleaned_data.get('school')
         grade = self.cleaned_data.get('grade')
@@ -257,7 +256,7 @@ class ChildCreationForm(forms.Form):
         return child
 
 
-# Temp 학력
+# Temp 학력 폼
 class EduLevelForm(forms.Form):
     edulevel = forms.CharField(
         label='졸업한 학교',
@@ -330,71 +329,48 @@ class PasswordChangeForm(forms.Form):
 
 
 class ProfileUpdateForm(forms.ModelForm):
-    school = forms.CharField(label='학교', widget=forms.TextInput)
-
-    grade_list = range(0, 7)
-    GRADE = []
-    for grade in grade_list:
-        if grade == 0:
-            GRADE.append([grade, " "])
-        else:
-            GRADE.append([grade, str(grade)])
-
-    grade = forms.CharField(widget=forms.Select(
-        choices=tuple(GRADE),
-        attrs={'name': 'grade'},
-    ),
-        label='학년'
-    )
-
-    # 나이 select 위젯 선언
-    age_list = range(0, 101)
-    AGE_CONTROL = []
-    for age in age_list:
-        if age == 0:
-            AGE_CONTROL.append([age, " "])
-        else:
-            AGE_CONTROL.append([age, str(age)])
-
-    age = forms.CharField(widget=forms.Select(
-        choices=tuple(AGE_CONTROL),
-        attrs={'name': 'age'},
-    ),
-        label='나이'
-    )
-    address1 = forms.CharField(label='주소', widget=forms.TextInput)
-    address2 = forms.CharField(label='상세 주소', widget=forms.TextInput)
-
-    auth_doc = forms.FileField(label='인증서류')
-    tel = forms.CharField(label='사무실 연락처', max_length=15)
-
-    def __init__(self, *args, **kwargs):
-        super(ProfileUpdateForm, self).__init__(*args, **kwargs)
-        self.fields['auth_doc'].required = False
-        self.fields['tel'].required = False
-        self.fields['school'].required = False
-        self.fields['grade'].required = False
-        self.fields['age'].required = False
-        self.fields['address1'].required = False
-        self.fields['address2'].required = False
-
     class Meta:
         model = Profile
         fields = ('phone', 'receive_email')
 
-    def student_save(self, student):
-        student.school = self.cleaned_data.get('school')
-        student.grade = self.cleaned_data.get('grade')
-        student.age = self.cleaned_data.get('age')
-        student.address1 = self.cleaned_data.get('address1')
-        student.address2 = self.cleaned_data.get('address2')
 
-        student.save()
+class StudentUpdateForm(forms.ModelForm):
+    class Meta:
+        grade_list = range(0, 7)
+        GRADE = []
+        for grade in grade_list:
+            if grade == 0:
+                GRADE.append([grade, " "])
+            else:
+                GRADE.append([grade, str(grade)])
 
-    def schoolauth_save(self, schoolauth):
-        schoolauth.school = self.cleaned_data.get('school')
-        schoolauth.tel = self.cleaned_data.get('tel')
+        age_list = range(0, 101)
+        AGE_CONTROL = []
+        for age in age_list:
+            if age == 0:
+                AGE_CONTROL.append([age, " "])
+            else:
+                AGE_CONTROL.append([age, str(age)])
 
-        return schoolauth
+        model = Student
+        exclude = ('profile', 'gender')
+        widgets = {
+            'grade': forms.Select(choices=tuple(GRADE), attrs={'name': 'grade'}),
+            'age': forms.Select(choices=tuple(AGE_CONTROL), attrs={'name': 'age'})
+        }
 
 
+class SchoolAuthUpdateForm(forms.ModelForm):
+    # school = forms.CharField(label='학교', widget=forms.TextInput)
+    # auth_doc = forms.FileField(label='인증서류')
+    # tel = forms.CharField(label='사무실 연락처', max_length=15)
+
+    class Meta:
+        model = SchoolAuth
+        exclude = ('profile',)
+
+    # def schoolauth_save(self, schoolauth):
+    #     schoolauth.school = self.cleaned_data.get('school')
+    #     schoolauth.tel = self.cleaned_data.get('tel')
+    #
+    #     return schoolauth

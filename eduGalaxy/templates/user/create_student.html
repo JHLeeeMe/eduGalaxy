@@ -10,9 +10,8 @@
     <div class="panel-heading">
         <h1 align="center">학생 정보 입력</h1>
     </div>
-<div class="panel-body">
-    <form name="student_form" action="." method="post"> {% csrf_token %}
-        <div>
+    <div class="panel-body">
+        <form name="student_form" action="." method="post"> {% csrf_token %}
             <p>  <!-- 학교 & 학년-->
                 {{ form.school.label_tag }} {{ form.school }}
                 {{ form.grade.label_tag }} {{ form.grade }}
@@ -41,7 +40,6 @@
                 {{ form.address2.label_tag }}
                 {{ form.address2 }}
             </p>
-        </div>
             <div class="form-actions">
                 <button class="btn btn-primary" name="next" type="submit">다음</button>
                 <a href="{% url 'user:temp_delete' pk=pk %}">
@@ -49,7 +47,6 @@
                 </a>
             </div>
         </form>
-
     </div>
 </div>
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
