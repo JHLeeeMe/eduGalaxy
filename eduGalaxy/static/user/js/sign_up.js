@@ -25,14 +25,27 @@ function Change_Email(){
 // options[아이디.selectedIndex].text : select 박스 옵션에 맞는 텍스트
 // options[아이디.selectedIndex].value : 옵션에 맞는 값
 
+var cnt = 6
+if (document.getElementsByName('initial').length) {
+    cnt = 6 - document.getElementsByName('initial').length;
+}
 function addField() {
-    var items = document.createElement('p');
-    items.innerHTML = document.getElementById('p_graduation').innerHTML;
-    document.getElementById('div_graduation').appendChild(items);
+    if (cnt > 0) {
+        var items = document.createElement('p');
+        items.innerHTML = document.getElementById('p_graduation').innerHTML;
+        document.getElementById('div_graduation').appendChild(items);
+        cnt -= 1
+        console.log(cnt)
+    } else {
+        alert('더는 추가할 수 없습니다.')
+    }
 }
 
 function removeField(obj) {
-    document.getElementById('div_graduation').removeChild(obj.parentNode);
+    if (cnt < 6) {
+        document.getElementById('div_graduation').removeChild(obj.parentNode);
+        cnt += 1
+    }
 }
 
 function address_search() {
