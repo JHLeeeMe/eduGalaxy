@@ -1,7 +1,7 @@
 from django.urls import reverse_lazy, reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpRequest
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic.edit import FormView, View, UpdateView
+from django.views.generic.edit import FormView, View, UpdateView, CreateView
 from django.views.generic.base import TemplateView, RedirectView
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -17,9 +17,11 @@ from django.middleware.csrf import _compare_salted_tokens
 from django.core.exceptions import ObjectDoesNotExist
 
 from .mixins import VerificationEmailMixin
-from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm
+
+from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm, \
+    ParentCreationForm, ChildCreationForm, EduLevelFormset
 from apps.user.forms import ProfileUpdateForm, StudentUpdateForm, SchoolAuthUpdateForm, PasswordChangeForm
-from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth, Parent, EduLevel
+from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth, Parent, EduLevel, TempChild
 
 import os
 
@@ -72,14 +74,16 @@ class ProfileCreateView(FormView):
         group = self.request.POST['group']
         pk = temp.id
 
+        temp.profile = data
+        temp.create_date = timezone.now()
+        temp.save()
+
         if group == "학생":
             nexturl = 'user:student'
         elif group == "학교 관계자":
             nexturl = 'user:school_auth'
-
-        temp.profile = data
-        temp.create_date = timezone.now()
-        temp.save()
+        elif group == "학부모":
+            nexturl = 'user:parent'
 
         return HttpResponseRedirect(reverse_lazy(nexturl, kwargs={'pk': pk}))
 
@@ -133,6 +137,84 @@ class StudentCreateView(FormView):
         temp_object.delete()
 
         return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
+
+
+# 학부모 정보 입력
+class ParentCreateView(CreateView):
+    model = Parent
+    form_class = ParentCreationForm
+    template_name = "user/create_parent.html"
+
+    def get_child(self):
+        pk = self.kwargs['pk']
+        temp = get_object_or_404(Temp, id=pk)
+        return TempChild.objects.filter(temp=temp)
+
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        if self.get_child():
+            kwargs.update({
+               'children': self.get_child()
+            })
+        return render(self.request, self.template_name, self.get_context_data(**kwargs))
+
+    # formset 정의
+    def form_valid(self, form):
+
+        temp = TempUtil(self.kwargs['pk'])
+
+        # EdUer save
+        eduser = temp.eduser_save()
+
+        # Profile save
+        profile = temp.profile_save()
+
+        # Temp delete
+        temp_object = temp.get_object()
+        temp_object.delete()
+
+        return HttpResponseRedirect(reverse_lazy('user:result', kwargs={'pk': eduser.id}))
+
+
+# 자녀 정보 입력 뷰
+class ChildCreateView(FormView):
+    form_class = ChildCreationForm
+    template_name = "user/create_child.html"
+
+    def get_object(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(Temp, id=pk)
+
+    def get_formset(self):
+        if self.request.method == 'POST':
+            formset = EduLevelFormset(self.request.POST)
+        else:
+            formset = EduLevelFormset()
+        return formset
+
+    def get(self, request, *args, **kwargs):
+        kwargs.update({'formsets': self.get_formset()})
+        return render(self.request, self.template_name, self.get_context_data(**kwargs))
+
+    def form_valid(self, form):
+        temp = self.get_object()
+        temp_child = form.child_data()
+
+        temp_child.temp = temp
+        temp_child.save()
+
+        return HttpResponseRedirect(reverse_lazy('user:parent', kwargs={'pk': temp.id}))
+
+
+# 자녀 정보 삭제 뷰
+class TempChildDeleteView(RedirectView):
+    def get(self, request, *args, **kwargs):
+        pk = self.kwargs['pk']
+        tempchild = get_object_or_404(TempChild, id=pk)
+        temp = tempchild.temp
+
+        tempchild.delete()
+        return HttpResponseRedirect(reverse_lazy('user:parent', kwargs={'pk': temp.id}))
 
 
 # 사용자 - 학교 관계자 정보
@@ -219,6 +301,11 @@ class TempDeleteView(RedirectView):
     def get(self, request, *args, **kwargs):
         temp = TempUtil(self.kwargs['pk'])
         temp_object = temp.get_object()
+
+        tempchild = TempChild.objects.filter(temp=temp_object)
+        if tempchild.exists():
+            tempchild.delete()
+
         temp_object.delete()
         return redirect('school:index')
 

@@ -201,7 +201,7 @@ class LogAdmin(admin.ModelAdmin):
 
 
 class TempAdmin(admin.ModelAdmin):
-    list_display = ('id', 'eduser', 'profile', 'create_date', 'student', 'schoolauth', 'parent', 'child')
+    list_display = ('id', 'eduser', 'profile', 'create_date')
     list_display_links = ('id',)
     list_per_page = 15
 
