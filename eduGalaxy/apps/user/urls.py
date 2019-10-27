@@ -7,9 +7,14 @@ app_name = 'user'
 urlpatterns = [
     path('login/', views.LoginView.as_view(template_name='user/login.html'), name='login'),
     path('logout/', views.LogoutView.as_view(template_name='school/index.html'), name='logout'),
-    path('signup/', user_views.EdUserCreateView.as_view(), name='signup'),
+    path('agreement/', user_views.TemplateView.as_view(template_name='user/agreement.html'), name='signup'),
+    path('signup/', user_views.EdUserCreateView.as_view(), name='eduser'),
     path('signup/<int:pk>/profile/', user_views.ProfileCreateView.as_view(), name='profile'),
     path('signup/<int:pk>/student/', user_views.StudentCreateView.as_view(), name='student'),
+
+    path('signup/<int:pk>/parent/', user_views.ParentCreateView.as_view(), name='parent'),
+    path('signup/<int:pk>/child/', user_views.ChildCreateView.as_view(), name='add_child'),
+    path('signup/<int:pk>/child_delete/', user_views.TempChildDeleteView.as_view(), name='temp_child_delete'),
     path('signup/<int:pk>/school_auth/', user_views.SchoolAuthCreateView.as_view(), name='school_auth'),
     path('signup/<int:pk>/result/', user_views.ResultCreateView.as_view(), name='result'),
     path('signup/<int:pk>/delete', user_views.TempDeleteView.as_view(), name='temp_delete'),
