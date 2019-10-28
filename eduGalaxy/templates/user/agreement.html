@@ -11,9 +11,6 @@
     <div class="panel-heading">
         <h1 align="center">약관 동의</h1>
     </div>
-
-    {% include 'user/social/social_login_panel.html' with panel_name="소셜회원가입" %}
-
     <div class="panel-body">
         <object data="/static/user/txt/agreement.txt"></object>
         <a href="{% url 'user:eduser' %}">동의</a>
