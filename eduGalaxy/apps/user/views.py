@@ -21,7 +21,7 @@ from .mixins import VerificationEmailMixin
 from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm, \
     ParentCreationForm, ChildCreationForm, EduLevelFormset
 from apps.user.forms import ProfileUpdateForm, StudentUpdateForm, SchoolAuthUpdateForm, PasswordChangeForm
-from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth, Parent, EduLevel, TempChild
+from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth, Parent, EduLevel, TempChild, Child
 
 import os
 
@@ -145,6 +145,7 @@ class ParentCreateView(CreateView):
     form_class = ParentCreationForm
     template_name = "user/create_parent.html"
 
+    # 해당 자녀 데이터 필터(TempChild)
     def get_child(self):
         pk = self.kwargs['pk']
         temp = get_object_or_404(Temp, id=pk)
@@ -169,8 +170,51 @@ class ParentCreateView(CreateView):
         # Profile save
         profile = temp.profile_save()
 
+        # 학부모 정보 저장
+        parent = form.save(commit=False)
+        parent.profile = profile
+        parent.save()
+
+        # tempchild 불러온 후 리스트형으로 변경
+        child_query = self.get_child()
+        children = list(child_query.values())
+
+        # 자녀 정보 저장
+        for child in children:
+            child_data = Child(
+                parent = parent,
+                school = child['school'],
+                grade = int(child['grade']),
+                age = int(child['age']),
+                gender = child['gender']
+            )
+            child_data.save()
+
+            # 재학중인 학력 데이터 저장
+            now_edulevel = EduLevel(
+                school = child_data.school,
+                status = "재학중",
+                child = child_data
+            )
+            now_edulevel.save()
+
+            # 졸업한 학력 데이터 저장
+            child_edulevel = child['edulevel'].split('|')
+            for edulevel in child_edulevel:
+                finish_edulevel = EduLevel(
+                    school = edulevel,
+                    status = "졸업",
+                    child = child_data
+                )
+                finish_edulevel.save()
+
         # Temp delete
         temp_object = temp.get_object()
+
+        temp_children = self.get_child()
+        for temp_child in temp_children:
+            temp_child.delete()
+
         temp_object.delete()
 
         return HttpResponseRedirect(reverse_lazy('user:result', kwargs={'pk': eduser.id}))
@@ -196,15 +240,51 @@ class ChildCreateView(FormView):
         kwargs.update({'formsets': self.get_formset()})
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
 
-    def form_valid(self, form):
-        temp = self.get_object()
-        temp_child = form.child_data()
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        formsets = EduLevelFormset(self.request.POST)
 
+        if form.is_valid():
+            if formsets.is_valid():
+                return self.formset_valid(form, formsets)
+            else:
+                return self.formset_invalid(form, formsets)
+        else:
+            return self.formset_invalid(form, formsets)
+
+    def formset_valid(self, form, formsets):
+        edulevel_list = []
+        school = form.cleaned_data.get('school')
+
+        # 졸업한 학교 리스트로 변경
+        for formset in formsets:
+            edulevel = formset.cleaned_data.get('edulevel')
+            # 다니는 학교하고 다를 경우 리스트 값 추가
+            if school != edulevel:
+                edulevel_list.append(edulevel)
+
+        # 리스트 중복 값 제거
+        edulevel_list = list(set(edulevel_list))
+        if None in edulevel_list:
+            edulevel_list.remove(None)
+        # 리스트에서 문자열로 변환 (|으로 조인)
+        str_edulevel = '|'.join(edulevel_list)
+        temp = self.get_object()
+
+        # 자녀 데이터 모델에 저장
+        temp_child = form.child_data()
+        temp_child.edulevel = str_edulevel
         temp_child.temp = temp
         temp_child.save()
 
         return HttpResponseRedirect(reverse_lazy('user:parent', kwargs={'pk': temp.id}))
 
+    def formset_invalid(self, form, formsets):
+        context = {
+            'form': form,
+            'formsets': formsets
+        }
+        return self.render_to_response(context)
 
 # 자녀 정보 삭제 뷰
 class TempChildDeleteView(RedirectView):
