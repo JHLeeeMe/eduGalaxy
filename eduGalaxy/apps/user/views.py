@@ -1,14 +1,13 @@
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic.edit import FormView, View, UpdateView
+from django.views.generic.edit import FormView, View, UpdateView, CreateView
 from django.views.generic.base import TemplateView, RedirectView
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model, login
 from django.contrib import messages
-from django.contrib.messages.views import SuccessMessageMixin
 from django.utils import timezone
 
 # social auth
@@ -17,9 +16,11 @@ from django.middleware.csrf import _compare_salted_tokens
 from django.core.exceptions import ObjectDoesNotExist
 
 from .mixins import VerificationEmailMixin
-from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm
+
+from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm, \
+    ParentCreationForm, ChildCreationForm, EduLevelFormset
 from apps.user.forms import ProfileUpdateForm, StudentUpdateForm, SchoolAuthUpdateForm, PasswordChangeForm
-from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth, Parent, EduLevel
+from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth, Parent, EduLevel, TempChild
 
 import os
 
@@ -72,14 +73,16 @@ class ProfileCreateView(FormView):
         group = self.request.POST['group']
         pk = temp.id
 
+        temp.profile = data
+        temp.create_date = timezone.now()
+        temp.save()
+
         if group == "학생":
             nexturl = 'user:student'
         elif group == "학교 관계자":
             nexturl = 'user:school_auth'
-
-        temp.profile = data
-        temp.create_date = timezone.now()
-        temp.save()
+        elif group == "학부모":
+            nexturl = 'user:parent'
 
         return HttpResponseRedirect(reverse_lazy(nexturl, kwargs={'pk': pk}))
 
@@ -133,6 +136,84 @@ class StudentCreateView(FormView):
         temp_object.delete()
 
         return HttpResponseRedirect(reverse_lazy(self.get_success_url(), kwargs={'pk': eduser.id}))
+
+
+# 학부모 정보 입력
+class ParentCreateView(CreateView):
+    model = Parent
+    form_class = ParentCreationForm
+    template_name = "user/create_parent.html"
+
+    def get_child(self):
+        pk = self.kwargs['pk']
+        temp = get_object_or_404(Temp, id=pk)
+        return TempChild.objects.filter(temp=temp)
+
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        if self.get_child():
+            kwargs.update({
+               'children': self.get_child()
+            })
+        return render(self.request, self.template_name, self.get_context_data(**kwargs))
+
+    # formset 정의
+    def form_valid(self, form):
+
+        temp = TempUtil(self.kwargs['pk'])
+
+        # EdUer save
+        eduser = temp.eduser_save()
+
+        # Profile save
+        profile = temp.profile_save()
+
+        # Temp delete
+        temp_object = temp.get_object()
+        temp_object.delete()
+
+        return HttpResponseRedirect(reverse_lazy('user:result', kwargs={'pk': eduser.id}))
+
+
+# 자녀 정보 입력 뷰
+class ChildCreateView(FormView):
+    form_class = ChildCreationForm
+    template_name = "user/create_child.html"
+
+    def get_object(self):
+        pk = self.kwargs['pk']
+        return get_object_or_404(Temp, id=pk)
+
+    def get_formset(self):
+        if self.request.method == 'POST':
+            formset = EduLevelFormset(self.request.POST)
+        else:
+            formset = EduLevelFormset()
+        return formset
+
+    def get(self, request, *args, **kwargs):
+        kwargs.update({'formsets': self.get_formset()})
+        return render(self.request, self.template_name, self.get_context_data(**kwargs))
+
+    def form_valid(self, form):
+        temp = self.get_object()
+        temp_child = form.child_data()
+
+        temp_child.temp = temp
+        temp_child.save()
+
+        return HttpResponseRedirect(reverse_lazy('user:parent', kwargs={'pk': temp.id}))
+
+
+# 자녀 정보 삭제 뷰
+class TempChildDeleteView(RedirectView):
+    def get(self, request, *args, **kwargs):
+        pk = self.kwargs['pk']
+        tempchild = get_object_or_404(TempChild, id=pk)
+        temp = tempchild.temp
+
+        tempchild.delete()
+        return HttpResponseRedirect(reverse_lazy('user:parent', kwargs={'pk': temp.id}))
 
 
 # 사용자 - 학교 관계자 정보
@@ -219,6 +300,11 @@ class TempDeleteView(RedirectView):
     def get(self, request, *args, **kwargs):
         temp = TempUtil(self.kwargs['pk'])
         temp_object = temp.get_object()
+
+        tempchild = TempChild.objects.filter(temp=temp_object)
+        if tempchild.exists():
+            tempchild.delete()
+
         temp_object.delete()
         return redirect('school:index')
 
@@ -279,7 +365,7 @@ class ProfileUpdateView(UpdateView, LoginRequiredMixin):
         return profile
 
 
-class StudentUpdateView(SuccessMessageMixin, UpdateView, LoginRequiredMixin):
+class StudentUpdateView(UpdateView, LoginRequiredMixin):
     model = Student
     form_class = StudentUpdateForm
     context_object_name = 'student'
@@ -293,14 +379,9 @@ class StudentUpdateView(SuccessMessageMixin, UpdateView, LoginRequiredMixin):
         return student
 
     def form_valid(self, form):
-        student = form.save(commit=False)
-        if not student.gender == self.request.POST.get('gender'):
-            student.gender = self.request.POST.get('gender')
-        student.save()
-
         messages.add_message(self.request, messages.SUCCESS, self.success_message)
 
-        return redirect(self.success_url)
+        return super().form_valid(form)
 
 
 class SchoolAuthUpdateView(UpdateView, LoginRequiredMixin):
@@ -435,6 +516,8 @@ class ResendVerificationEmailView(View, VerificationEmailMixin):
                 user = self.model.objects.get(email=request.user.email)
             except self.model.DoesNotExist:
                 messages.error(self.request, '알 수 없는 사용자 입니다.')
+                # messages.add_message(self.request, messages.error, '같은 이메일로 가입된 정보가 있습니다. '
+                #                        '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.')
             else:
                 self.send_verification_email(user)
 
@@ -457,6 +540,8 @@ class SocialLoginCallbackView(NaverLoginMixin, View, VerificationEmailMixin):
 
             if not _compare_salted_tokens(csrf_token, request.COOKIES.get('csrftoken')):  # state(csrf_token)이 잘못된 경우
                 messages.error(request, '잘못된 경로로 로그인하셨습니다.', extra_tags='danger')
+                # messages.add_message(self.request, messages.error, '같은 이메일로 가입된 정보가 있습니다. '
+                #                        '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.')
                 return HttpResponseRedirect(self.failure_url)
             is_success, data = self.login_or_create_with_naver(csrf_token, code)
             if not is_success:  # 로그인 or 생성 실패
@@ -464,9 +549,13 @@ class SocialLoginCallbackView(NaverLoginMixin, View, VerificationEmailMixin):
                     user = data[2]
                     self.send_verification_email(user)
                     messages.error(request, data[0], extra_tags='danger')
+                    # messages.add_message(self.request, messages.error, '같은 이메일로 가입된 정보가 있습니다. '
+                    #                        '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.')
                     return HttpResponseRedirect(data[1])
                 else:
                     messages.error(request, data, extra_tags='danger')
+                    # messages.add_message(self.request, messages.error, '같은 이메일로 가입된 정보가 있습니다. '
+                    #                        '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.')
             return HttpResponseRedirect(data if is_success else self.failure_url)
         else:
             return HttpResponseRedirect(self.failure_url)
@@ -489,7 +578,6 @@ class SocialLoginCallbackView(NaverLoginMixin, View, VerificationEmailMixin):
         try:
             # 유저 검색
             user = self.model.objects.get(email=self.oauth_user_email)
-            print(user.profile)
             profile = Profile.objects.get(eduser_id=user.id)
             if not profile.is_google:  # 기존 유저는 있지만 소셜 연동(google)을 하지 않았을 때
                 if profile.confirm:
@@ -497,8 +585,11 @@ class SocialLoginCallbackView(NaverLoginMixin, View, VerificationEmailMixin):
                     profile.save()
                     login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 else:
-                    messages.error(request, '같은 이메일로 가입된 정보가 있습니다. '
-                                            '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.')
+                    # messages.error(request, '같은 이메일로 가입된 정보가 있습니다. '
+                    #                        '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.')
+                    messages.add_message(self.request, messages.error, '같은 이메일로 가입된 정보가 있습니다. '
+                                                                       '본인 확인용 메일을 보내드렸습니다. '
+                                                                       '인증 후 연동 가능합니다.')
                     self.send_verification_email(user)  # email resend
             else:
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
