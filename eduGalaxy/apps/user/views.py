@@ -19,7 +19,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from .mixins import VerificationEmailMixin
 
 from apps.user.forms import EdUserCreationForm, ProfileCreationForm, StudentCreationForm, SchoolAuthCreationForm, \
-    ParentCreationForm, ChildCreationForm, EduLevelFormset
+    ParentForm, ChildForm, EduLevelFormset
 from apps.user.forms import ProfileUpdateForm, StudentUpdateForm, SchoolAuthUpdateForm, PasswordChangeForm
 from apps.user.models import EdUser, Temp, Profile, Student, SchoolAuth, Parent, EduLevel, TempChild, Child
 
@@ -142,7 +142,7 @@ class StudentCreateView(FormView):
 # 학부모 정보 입력
 class ParentCreateView(CreateView):
     model = Parent
-    form_class = ParentCreationForm
+    form_class = ParentForm
     template_name = "user/create_parent.html"
 
     # 해당 자녀 데이터 필터(TempChild)
@@ -222,7 +222,7 @@ class ParentCreateView(CreateView):
 
 # 자녀 정보 입력 뷰
 class ChildCreateView(FormView):
-    form_class = ChildCreationForm
+    form_class = ChildForm
     template_name = "user/create_child.html"
 
     def get_object(self):
@@ -272,7 +272,7 @@ class ChildCreateView(FormView):
         temp = self.get_object()
 
         # 자녀 데이터 모델에 저장
-        temp_child = form.child_data()
+        temp_child = form.create_child()
         temp_child.edulevel = str_edulevel
         temp_child.temp = temp
         temp_child.save()
@@ -500,17 +500,25 @@ class SchoolAuthUpdateView(UpdateView, LoginRequiredMixin):
         return super().form_valid(form)
 
 
-# class ParentUpdateView(UpdateView, LoginRequiredMixin):
-#     model = Parent
-#     form_class = ParentUpdateForm
-#     context_object_name = 'parent'
-#     template_name = 'user/mypage/update_profile.html'
-#     success_url = reverse_lazy('user:update_profile')
-#
-#     def get_object(self):
-#         parent = get_object_or_404(Parent, pk=self.request.user.pk)
-#
-#         return parent
+class ParentUpdateView(SuccessMessageMixin, UpdateView, LoginRequiredMixin):
+    model = Parent
+    form_class = ParentForm
+    context_object_name = 'parent'
+    template_name = 'user/mypage/update_parent.html'
+    success_url = reverse_lazy('user:update_profile')
+
+    def get_child(self):
+        self.kwargs.update({'pk': self.request.user.pk})
+        parent = self.get_object()
+        child = Child.objects.filter(parent_id=parent.pk)
+
+        return child
+
+    def get(self, request, *args, **kwargs):
+        kwargs.update({'children': self.get_child(),
+                       'pk': self.request.user.pk})
+        self.object = self.get_object()
+        return render(self.request, self.template_name, self.get_context_data(**kwargs))
 
 # 학생 학력 수정 뷰
 class EduLevelUpdateView(View, LoginRequiredMixin):

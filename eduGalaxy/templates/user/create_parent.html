@@ -12,7 +12,7 @@
         <div class="panel-group">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <a href="{% url 'user:add_child' pk=pk %}">
+                    <a href="{% url 'user:add_temp_child' pk=pk %}">
                         <button type="button" class="btn btn-success">자녀 정보 추가</button>
                     </a>
                 </div>
@@ -34,7 +34,7 @@
                             <td>{{ child.grade }}</td>
                             <td>{{ child.age }}</td>
                             <td>{{ child.gender }}</td>
-                            <td><a href="{% url 'user:temp_child_delete' pk=child.pk %}">
+                            <td><a href="{% url 'user:delete_temp_child' pk=child.pk %}">
                                 <button type="button" class="btn btn-danger btn-xs" name="child_delete">제거</button>
                             </a></td>
                         </tr>
