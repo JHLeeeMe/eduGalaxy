@@ -1,0 +1,20 @@
+{% extends 'user/base.html' %}
+{% load static %}
+
+{% block head_title %}
+    <title>Agreement</title>
+{% endblock head_title %}
+
+{% block content %}
+<script src="{% static 'user/js/sign_up.js' %}" type="text/javascript"></script>
+<div class="panel panel-default registration">
+    <div class="panel-heading">
+        <h1 align="center">약관 동의</h1>
+    </div>
+    <div class="panel-body">
+        <object data="/static/user/txt/agreement.txt"></object>
+        <a href="{% url 'user:eduser' %}">동의</a>
+        <a href="{% url 'school:index' %}">취소</a>
+    </div>
+</div>
+{% endblock content %}

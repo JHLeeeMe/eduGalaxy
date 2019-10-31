@@ -27,17 +27,12 @@
                         {{ form.age.label_tag }}
                         {{ form.age }}
                     </p>
-<!--                    <div class="col-sm-2">{{ form.gender.label_tag }}</div>-->
-<!--                    <div class="col-sm-6">-->
-<!--                        {% for radio in form.gender %}-->
-<!--                            {{ radio.tag }}-->
-<!--                            {{ radio.choice_label }}-->
-<!--                        {% endfor %}-->
-<!--                    </div>-->
                     <p>
-                        성별:
-                        <label><input type="radio" name="gender" value="M" checked='checked'>남</label>
-                        <label><input type="radio" name="gender" value="F">여</label>
+                        {{ form.gender.label_tag }}
+                        {% for radio in form.gender %}
+                            {{ radio.tag }}
+                            {{ radio.choice_label }}
+                        {% endfor %}
                     </p>
                     <p>
                         {{ form.address1.label_tag }}
