@@ -76,7 +76,7 @@ class Post(models.Model):
     modified_date = models.DateTimeField(verbose_name='수정날짜', blank=True, null=True)
     modified_ip = models.CharField(verbose_name='게시판 수정 ip', max_length=20)
 
-    eduser = models.OneToOneField(EdUser, on_delete=models.CASCADE)
+    eduser = models.ForeignKey(EdUser, on_delete=models.CASCADE)
     info = models.OneToOneField(Info, on_delete=models.CASCADE)
 
     def __str__(self):
