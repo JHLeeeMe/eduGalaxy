@@ -29,21 +29,22 @@ GENDER_LIST = (
     ("여", "여")
 )
 
+
 # user 계정 폼
 class EdUserCreationForm(forms.Form):
     email1 = forms.CharField(widget=forms.TextInput(
             attrs={
                 'autofocus': 'autofocus',
-                'required': 'required',}
-            ),
+                'required': 'required',
+            }),
         label='이메일'
     )
 
     email2 = forms.CharField(widget=forms.TextInput(
             attrs={
                 'id': 'user_email2',
-                'disabled': 'disabled',}
-        )
+                'disabled': 'disabled',
+            })
     )
 
     # 이메일 선택 리스트 선택시 Change_Email() 함수 호출
@@ -353,10 +354,11 @@ class StudentUpdateForm(forms.ModelForm):
                 AGE_CONTROL.append([age, str(age)])
 
         model = Student
-        exclude = ('profile', 'gender')
+        exclude = ('profile',)
         widgets = {
             'grade': forms.Select(choices=tuple(GRADE), attrs={'name': 'grade'}),
-            'age': forms.Select(choices=tuple(AGE_CONTROL), attrs={'name': 'age'})
+            'age': forms.Select(choices=tuple(AGE_CONTROL), attrs={'name': 'age'}),
+            'gender': forms.RadioSelect(choices=GENDER_LIST, attrs={'style': 'display: inline-block', 'id': 'gender'})
         }
 
 
@@ -369,8 +371,3 @@ class SchoolAuthUpdateForm(forms.ModelForm):
         model = SchoolAuth
         exclude = ('profile',)
 
-    # def schoolauth_save(self, schoolauth):
-    #     schoolauth.school = self.cleaned_data.get('school')
-    #     schoolauth.tel = self.cleaned_data.get('tel')
-    #
-    #     return schoolauth
