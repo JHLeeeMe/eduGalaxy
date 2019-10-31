@@ -1,7 +1,6 @@
 {% extends 'user/mypage/update_base.html' %}
 {% load static %}
 
-
 {% block mypage_gbody %}
 <form name="parent_form" action="." method="post"> {% csrf_token %}
     <div class="container">
@@ -10,9 +9,9 @@
             <div class="panel-group">
                 <div class="panel panel-default">
                     <div class="panel-heading">자녀 정보
-
+                        <a href="{% url 'user:add_child' %}">
                             <button type="button" class="btn btn-success">자녀 정보 추가</button>
-
+                        </a>
                     </div>
                     <div class="panel-body">
                         <table class="table table-striped">
@@ -33,8 +32,12 @@
                                 <td>{{ child.age }}</td>
                                 <td>{{ child.gender }}</td>
                                 <td>
-                                    <button type="button" class="btn btn-primary btn-xs" name="child_update">변경</button>
-                                    <button type="button" class="btn btn-danger btn-xs" name="child_delete">제거</button>
+                                    <a href="{% url 'user:update_child' pk=child.pk %}">
+                                        <button type="button" class="btn btn-primary btn-xs" name="child_update">변경</button>
+                                    </a>
+                                    <a href="{% url 'user:delete_child' pk=child.pk %}">
+                                        <button type="button" class="btn btn-danger btn-xs" name="child_delete">제거</button>
+                                    </a>
                                 </td>
                             </tr>
                             </tbody>

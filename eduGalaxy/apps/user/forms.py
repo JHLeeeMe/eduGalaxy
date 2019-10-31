@@ -4,7 +4,7 @@ from django.forms import formset_factory
 from django.utils.translation import ugettext as _
 
 from apps.user.models import EdUser, Temp, TempChild, Log, Profile
-from apps.user.models import SchoolAuth, Student, Parent, Child
+from apps.user.models import SchoolAuth, Student, Parent, Child, EduLevel
 
 EMAIL_LIST = (
     ("select", "선택하세요"),
@@ -221,16 +221,14 @@ class ChildForm(forms.ModelForm):
             else:
                 AGE_CONTROL.append([age, str(age)])
 
-        exclude = ('profile', )
+        model = Child
+        fields = ('school', 'grade', 'age', 'gender')
         labels = {
             'school': '다니는 학교',
             'grade' : '학년',
             'age'   : '나이',
             'gender': '성별'
         }
-
-        model = Student
-        exclude = ('profile', 'gender')
         widgets = {
             'grade': forms.Select(choices=tuple(GRADE), attrs={'name': 'grade'}),
             'age': forms.Select(choices=tuple(AGE_CONTROL), attrs={'name': 'age'}),
@@ -240,10 +238,10 @@ class ChildForm(forms.ModelForm):
     # 자녀 정보 추가
     def create_child(self):
         child = TempChild(
-            school = self.cleaned_data.get('school'),
-            grade = self.cleaned_data.get('grade'),
-            age = self.cleaned_data.get('age'),
-            gender = self.cleaned_data.get('gender')
+            school=self.cleaned_data.get('school'),
+            grade=self.cleaned_data.get('grade'),
+            age=self.cleaned_data.get('age'),
+            gender=self.cleaned_data.get('gender')
         )
         return child
 
@@ -258,6 +256,16 @@ class EduLevelForm(forms.Form):
             }
         )
     )
+
+    def create_edulevel(self):
+        edulevel = EduLevel(
+            school=self.cleaned_data.get('edulevel'),
+            status="졸업"
+        )
+        return edulevel
+
+
+
 EduLevelFormset = formset_factory(EduLevelForm, extra=1)
 
 
