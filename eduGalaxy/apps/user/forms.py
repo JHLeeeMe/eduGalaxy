@@ -266,7 +266,6 @@ class EduLevelForm(forms.Form):
         return edulevel
 
 
-
 EduLevelFormset = formset_factory(EduLevelForm, extra=1)
 
 
