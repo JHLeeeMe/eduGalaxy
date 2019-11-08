@@ -16,7 +16,9 @@ class VerificationEmailMixin:
         message = '다음 주소로 이동하셔서 인증하세요. {}'.format(url)
         html_message = render(self.request, self.email_template_name, {'url': url}).content.decode('utf-8')
         user.email_user(subject, message, from_email=settings.EMAIL_HOST_USER, html_message=html_message)
-        messages.info(self.request, '회원가입을 축하드립니다. 가입하신 이메일주소로 인증메일을 발송했으니 확인 후 인증해주세요.')
+        messages.info(self.request, '회원가입을 축하드립니다. '
+                                    '가입하신 이메일주소로 인증메일을 발송했으니 확인 후 인증해주세요.',
+                      extra_tags='send_email_info')
 
     def build_verification_link(self, user, token):
         # return '{}/user/{}/verify/{}/'.format(self.request.META.get('HTTP_ORIGIN'), user.pk, token)

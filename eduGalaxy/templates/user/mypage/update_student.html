@@ -10,9 +10,11 @@
                 <div class="panel-body" onchange="submitBtnCtrl()">
                     {% if messages %}
                         {% for message in messages %}
-                            <div class="alert alert-warning">
-                                {{ message }}<br>
-                            </div>
+                            {% if message.tags == 'update_success success' %}
+                                <div class="alert alert-success">
+                                    {{ message }}<br>
+                                </div>
+                            {% endif %}
                         {% endfor %}
                     {% endif %}
                     <p>

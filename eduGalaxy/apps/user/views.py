@@ -185,19 +185,19 @@ class ParentCreateView(CreateView):
         # 자녀 정보 저장
         for child in children:
             child_data = Child(
-                parent = parent,
-                school = child['school'],
-                grade = int(child['grade']),
-                age = int(child['age']),
-                gender = child['gender']
+                parent=parent,
+                school=child['school'],
+                grade=int(child['grade']),
+                age=int(child['age']),
+                gender=child['gender']
             )
             child_data.save()
 
             # 재학중인 학력 데이터 저장
             now_edulevel = EduLevel(
-                school = child_data.school,
-                status = "재학중",
-                child = child_data
+                school=child_data.school,
+                status="재학중",
+                child=child_data
             )
             now_edulevel.save()
 
@@ -205,9 +205,9 @@ class ParentCreateView(CreateView):
             child_edulevel = child['edulevel'].split('|')
             for edulevel in child_edulevel:
                 finish_edulevel = EduLevel(
-                    school = edulevel,
-                    status = "졸업",
-                    child = child_data
+                    school=edulevel,
+                    status="졸업",
+                    child=child_data
                 )
                 finish_edulevel.save()
 
@@ -292,6 +292,7 @@ class TempChildCreateView(FormView):
             'formsets': formsets
         }
         return self.render_to_response(context)
+
 
 # 자녀 정보 삭제 뷰
 class TempChildDeleteView(RedirectView):
@@ -468,7 +469,7 @@ class StudentUpdateView(UpdateView, LoginRequiredMixin):
         return student
 
     def form_valid(self, form):
-        messages.add_message(self.request, messages.SUCCESS, self.success_message)
+        messages.success(self.request, self.success_message, extra_tags='update_success')
 
         return super().form_valid(form)
 
@@ -498,7 +499,7 @@ class SchoolAuthUpdateView(UpdateView, LoginRequiredMixin):
         if os.path.isfile(file_path):
             os.remove(file_path)
 
-        messages.add_message(self.request, messages.SUCCESS, self.success_message)
+        messages.success(self.request, self.success_message, extra_tags='update_success')
 
         return super().form_valid(form)
 
@@ -624,7 +625,6 @@ class ChildUpdateView(UpdateView, LoginRequiredMixin):
 
         return edu_level
 
-
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
 
@@ -633,6 +633,7 @@ class ChildUpdateView(UpdateView, LoginRequiredMixin):
             'edu_levels': self.get_edu_level()
         })
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
+
 
 class ChildDeleteView(RedirectView):
     def get(self, request, *args, **kwargs):
@@ -658,7 +659,6 @@ class ChildEduLevelCreateView(FormView, LoginRequiredMixin):
     def get(self, requset, *args, **kwargs):
         kwargs.update({'parent': self.get_parent()})
         return render(self.request, self.template_name, self.get_context_data(**kwargs))
-
 
     def form_valid(self, form):
         child = self.get_child()
@@ -709,6 +709,7 @@ class ChildEdulevelDeleteView(RedirectView):
         child = edu_level.child
         edu_level.delete()
         return HttpResponseRedirect(reverse_lazy('user:update_child', kwargs={'pk': child.pk}))
+
 
 # 학생 학력 수정 뷰
 class EduLevelUpdateView(View, LoginRequiredMixin):
@@ -772,9 +773,9 @@ class EduUserVerificationView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         if self.is_valid_token(**kwargs):
-            messages.info(request, '인증이 완료되었습니다.')
+            messages.info(request, '인증이 완료되었습니다.', extra_tags='send_email_info')
         else:
-            messages.info(request, '인증이 실패하였습니다.')
+            messages.info(request, '인증이 실패하였습니다.', extra_tags='send_email_info')
 
         return HttpResponseRedirect(reverse('user:login'))  # 인증 여부와 상관 없이 무조건 로그인 페이지로 이동
 
@@ -799,9 +800,7 @@ class ResendVerificationEmailView(View, VerificationEmailMixin):
             try:
                 user = self.model.objects.get(email=request.user.email)
             except self.model.DoesNotExist:
-                messages.error(self.request, '알 수 없는 사용자 입니다.')
-                # messages.add_message(self.request, messages.error, '같은 이메일로 가입된 정보가 있습니다. '
-                #                        '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.')
+                messages.error(self.request, '알 수 없는 사용자 입니다.', extra_tags='send_mail_error')
             else:
                 self.send_verification_email(user)
 
@@ -823,23 +822,17 @@ class SocialLoginCallbackView(NaverLoginMixin, View, VerificationEmailMixin):
             code = request.GET.get('code')
 
             if not _compare_salted_tokens(csrf_token, request.COOKIES.get('csrftoken')):  # state(csrf_token)이 잘못된 경우
-                messages.error(request, '잘못된 경로로 로그인하셨습니다.', extra_tags='danger')
-                # messages.add_message(self.request, messages.error, '같은 이메일로 가입된 정보가 있습니다. '
-                #                        '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.')
+                messages.error(request, '잘못된 경로로 로그인하셨습니다.', extra_tags='social_error')
                 return HttpResponseRedirect(self.failure_url)
             is_success, data = self.login_or_create_with_naver(csrf_token, code)
             if not is_success:  # 로그인 or 생성 실패
                 if type(data) is list:  # profile.confirm 이 False 일때는 data가 리스트형태로 리턴
                     user = data[2]
                     self.send_verification_email(user)
-                    messages.error(request, data[0], extra_tags='danger')
-                    # messages.add_message(self.request, messages.error, '같은 이메일로 가입된 정보가 있습니다. '
-                    #                        '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.')
+                    messages.error(request, data[0], extra_tags='social_error')
                     return HttpResponseRedirect(data[1])
                 else:
-                    messages.error(request, data, extra_tags='danger')
-                    # messages.add_message(self.request, messages.error, '같은 이메일로 가입된 정보가 있습니다. '
-                    #                        '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.')
+                    messages.error(request, data, extra_tags='social_error')
             return HttpResponseRedirect(data if is_success else self.failure_url)
         else:
             return HttpResponseRedirect(self.failure_url)
@@ -869,11 +862,9 @@ class SocialLoginCallbackView(NaverLoginMixin, View, VerificationEmailMixin):
                     profile.save()
                     login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 else:
-                    # messages.error(request, '같은 이메일로 가입된 정보가 있습니다. '
-                    #                        '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.')
-                    messages.add_message(self.request, messages.error, '같은 이메일로 가입된 정보가 있습니다. '
-                                                                       '본인 확인용 메일을 보내드렸습니다. '
-                                                                       '인증 후 연동 가능합니다.')
+                    messages.error(request, '같은 이메일로 가입된 정보가 있습니다. '
+                                            '본인 확인용 메일을 보내드렸습니다. 인증 후 연동 가능합니다.',
+                                   extra_tags='social_error')
                     self.send_verification_email(user)  # email resend
             else:
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
